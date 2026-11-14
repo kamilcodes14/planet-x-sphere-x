@@ -79,7 +79,7 @@ Two draft pull requests now hold the reversible integration changes:
 - Planet-X: [PR #1](https://github.com/kamilcodes14/planet-x-sphere-x/pull/1)
 - SpaceMind: [PR #8](https://github.com/kamilcodes14/Spacemind/pull/8)
 
-The Planet-X branch injects a small Research dock into the HTML after the original compressed scene is decompressed. It does not rewrite the five scene-part assets. The dock opens the existing full SpaceMind frontend in a large overlay and offers a separate-tab fallback.
+The Planet-X branch injects a small Research dock into the HTML after the original compressed scene is decompressed. It does not rewrite the five scene-part assets. The dock opens the existing full SpaceMind frontend in a large overlay and offers a separate-tab fallback. For safe preview testing, both the iframe and separate-tab link currently point to the SpaceMind integration preview deployment; after the SpaceMind framing change is accepted and merged, switch those two URLs to the stable `https://spacemind-frontend.vercel.app/` alias before merging the Planet-X PR.
 
 The SpaceMind branch removes the blanket `X-Frame-Options: DENY` header and adds a restrictive `frame-ancestors` policy allowing only same-origin and `https://kamilcodes14.github.io`. The existing `nosniff` and `Referrer-Policy` headers remain. No Supabase schema, corpus, Edge Function, provider secret, or production alias was changed.
 
