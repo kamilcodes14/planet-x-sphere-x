@@ -15,7 +15,31 @@
   const bytes=Uint8Array.from(atob(parts.join("").trim()),c=>c.charCodeAt(0));
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
   const html=await new Response(stream).text();
-  document.open();document.write(html);document.close();
+
+  // Add a lightweight SpaceMind workspace dock without editing the compressed
+  // observatory scene. The original scene and its assets remain byte-for-byte intact.
+  const dock = '<style>' +
+    '#px-space-mind-launch{position:fixed;z-index:2147483000;right:22px;bottom:22px;border:1px solid #8bcfff88;border-radius:999px;padding:13px 19px;background:#07192beF;color:#e8f7ff;font:600 14px system-ui;letter-spacing:.2px;box-shadow:0 8px 32px #0009;cursor:pointer}' +
+    '#px-space-mind-launch:hover{background:#103251}' +
+    '#px-space-mind-panel[popover]{position:fixed;inset:12px;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;border:1px solid #8bcfff66;border-radius:16px;background:#050913;color:#e8f7ff;overflow:hidden;box-shadow:0 18px 70px #000c}' +
+    '#px-space-mind-panel::backdrop{background:#000b;backdrop-filter:blur(5px)}' +
+    '#px-space-mind-panel .px-sm-bar{height:54px;display:flex;align-items:center;gap:14px;padding:0 16px;background:#0a1423;border-bottom:1px solid #ffffff20;font:13px system-ui}' +
+    '#px-space-mind-panel .px-sm-title{font-weight:700;letter-spacing:.3px;margin-right:auto}' +
+    '#px-space-mind-panel a,#px-space-mind-panel button{color:#cdeaff;background:transparent;border:1px solid #ffffff30;border-radius:8px;padding:8px 11px;text-decoration:none;font:12px system-ui;cursor:pointer}' +
+    '#px-space-mind-panel iframe{display:block;width:100%;height:calc(100% - 54px);border:0;background:#080b12}' +
+    '@media(max-width:600px){#px-space-mind-panel[popover]{inset:0;border-radius:0}#px-space-mind-launch{right:12px;bottom:12px}}' +
+    '</style>' +
+    '<button id="px-space-mind-launch" popovertarget="px-space-mind-panel" type="button">✦ SpaceMind Research</button>' +
+    '<section id="px-space-mind-panel" popover>' +
+    '<div class="px-sm-bar"><span class="px-sm-title">SPACE MIND · RESEARCH INTELLIGENCE</span>' +
+    '<a href="https://spacemind-frontend.vercel.app/" target="_blank" rel="noopener noreferrer">Open separately ↗</a>' +
+    '<button type="button" popovertarget="px-space-mind-panel" popovertargetaction="hide" aria-label="Close SpaceMind">Close ×</button></div>' +
+    '<iframe title="SpaceMind research workspace" src="https://spacemind-frontend.vercel.app/" allow="clipboard-read; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>' +
+    '</section>';
+  const integrated = /<\\/body>/i.test(html)
+    ? html.replace(/<\\/body>/i, dock + "</body>")
+    : html.replace(/<\\/html>/i, dock + "</html>");
+  document.open();document.write(integrated);document.close();
  }catch(e){document.getElementById("status").textContent="Universise failed to load: "+e.message}
 })();
 </script></body></html>
