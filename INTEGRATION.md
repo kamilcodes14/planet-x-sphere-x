@@ -72,6 +72,29 @@ The observatory should remain available while users move between Research AI, Mi
 - [ ] Existing SpaceMind tests, build, and checks pass; failures are documented.
 - [ ] Preview is accepted before production deployment.
 
-## Current limitations of this first pass
+## Implemented preview work
 
-This commit records the audited baseline and integration contract only. The source repositories are separate, and the current Planet-X GitHub Pages loader replaces the document with the decompressed observatory scene. A safe persistent workspace cannot be wired by blindly adding a static iframe or copying a few frontend files: the actual SpaceMind hosting origin, frame policy, route behavior, and authentication redirects must first be verified. No end-to-end tests have been run as part of this baseline commit.
+Two draft pull requests now hold the reversible integration changes:
+
+- Planet-X: [PR #1](https://github.com/kamilcodes14/planet-x-sphere-x/pull/1)
+- SpaceMind: [PR #8](https://github.com/kamilcodes14/Spacemind/pull/8)
+
+The Planet-X branch injects a small Research dock into the HTML after the original compressed scene is decompressed. It does not rewrite the five scene-part assets. The dock opens the existing full SpaceMind frontend in a large overlay and offers a separate-tab fallback.
+
+The SpaceMind branch removes the blanket `X-Frame-Options: DENY` header and adds a restrictive `frame-ancestors` policy allowing only same-origin and `https://kamilcodes14.github.io`. The existing `nosniff` and `Referrer-Policy` headers remain. No Supabase schema, corpus, Edge Function, provider secret, or production alias was changed.
+
+## Validation status
+
+- [x] SpaceMind Vercel preview deployment built successfully and reached READY for commit `7a2175e20eec073eb41b37b867e82f2db06f464f`.
+- [x] Planet-X loader JavaScript passed `node --check` locally.
+- [x] The Planet-X scene-part assets were not modified in this branch.
+- [ ] Verify the deployed preview's actual HTTP response headers and iframe rendering in a browser.
+- [ ] Verify sign-in/session continuity, especially Google OAuth and browser third-party storage behavior in an embedded context. Use the separate-tab fallback if required.
+- [ ] Run full SpaceMind tests and scientific workflow acceptance tests.
+- [ ] Validate the Planet-X preview in a browser on desktop and mobile.
+- [ ] Merge only after both previews and acceptance checks pass.
+
+The SpaceMind Vercel preview is available at:
+`https://spacemind-frontend-git-integration-planet-x-embed-syed-kamil.vercel.app`
+
+The current Planet-X repository does not expose a branch preview deployment through the connected hosting setup, so its dock still needs browser validation before merge. The SpaceMind preview is READY, but the separate Vercel project named `spacemind` reported an unrelated deployment error; this integration uses the existing `spacemind-frontend` project. No production deployment or Supabase change has been made.
