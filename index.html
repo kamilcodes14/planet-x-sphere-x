@@ -36,9 +36,12 @@
     '<button type="button" popovertarget="px-space-mind-panel" popovertargetaction="hide" aria-label="Close SpaceMind">Close ×</button></div>' +
     '<iframe title="SpaceMind research workspace" src="https://spacemind-frontend.vercel.app/" allow="clipboard-read; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>' +
     '</section>';
-  const integrated = /<\\/body>/i.test(html)
-    ? html.replace(/<\\/body>/i, dock + "</body>")
-    : html.replace(/<\\/html>/i, dock + "</html>");
+  const bodyEnd = html.toLowerCase().lastIndexOf("</body>");
+  const htmlEnd = html.toLowerCase().lastIndexOf("</html>");
+  const insertAt = bodyEnd >= 0 ? bodyEnd : htmlEnd;
+  const integrated = insertAt >= 0
+    ? html.slice(0, insertAt) + dock + html.slice(insertAt)
+    : html + dock;
   document.open();document.write(integrated);document.close();
  }catch(e){document.getElementById("status").textContent="Universise failed to load: "+e.message}
 })();
