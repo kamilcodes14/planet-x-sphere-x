@@ -57,6 +57,13 @@ body.side-off .side-tab{display:block}
 .bottom>span:first-child,#time,#epoch{display:none!important}
 /* hide the "Scientific integrity" note (element kept in the page, only hidden) */
 .note{display:none!important}
+
+/* Spacemind RAG launcher: isolated addition; Planet X scene styles remain unchanged. */
+#spacemind-rag-launcher{position:fixed;right:24px;bottom:24px;z-index:1000;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border:1px solid rgba(255,255,255,.24);border-radius:999px;background:#000;color:#fff;text-decoration:none;font:600 14px/1 Inter,ui-sans-serif,system-ui,Arial,sans-serif;letter-spacing:.01em;box-shadow:0 10px 30px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}
+#spacemind-rag-launcher:hover{transform:translateY(-3px);filter:brightness(1.15);box-shadow:0 14px 34px rgba(0,0,0,.6),0 3px 10px rgba(0,0,0,.35)}
+#spacemind-rag-launcher:focus-visible{outline:3px solid #fff;outline-offset:3px}
+@media(max-width:700px){#spacemind-rag-launcher{right:16px;bottom:calc(16px + env(safe-area-inset-bottom));min-height:46px;padding:0 19px}}
+@media(prefers-reduced-motion:reduce){#spacemind-rag-launcher{transition:none}}
 </style>
 </head>
 <body>
@@ -723,5 +730,8 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
  if(mq('(max-width:900px)'))document.body.classList.add('side-off');
 })();
 </script>
+
+<!-- Spacemind RAG chat launcher; opens the separate Spacemind app and preserves this Planet X scene. -->
+<a id="spacemind-rag-launcher" href="https://spacemind-orcin.vercel.app" target="_blank" rel="noopener noreferrer" aria-label="Open Spacemind RAG chat">Spacemind</a>
 </body>
 </html>
