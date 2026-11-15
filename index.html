@@ -1222,7 +1222,15 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   }
   return data||{answer:'The research service returned an empty response.',citations:[]};
  }
- async function send(v,skipFocus){
+ function readPlanetOverviewCache(key){
+  try{var raw=localStorage.getItem('planetx:spacemind:overview:v1:'+key);if(!raw)return null;var entry=JSON.parse(raw);if(!entry||entry.expiresAt<Date.now()||!entry.result||!entry.result.answer){localStorage.removeItem('planetx:spacemind:overview:v1:'+key);return null;}return entry.result;}catch(e){return null;}
+ }
+ function writePlanetOverviewCache(key,result){
+  if(!key||!result||typeof result.answer!=='string'||!result.answer.trim()||result.confident===false)return;
+  if((result.warnings||[]).length||(result.citations||[]).some(function(c){return c.origin==='spacemind-tool-v1';}))return;
+  try{localStorage.setItem('planetx:spacemind:overview:v1:'+key,JSON.stringify({expiresAt:Date.now()+7*24*60*60*1000,result:{answer:result.answer,citations:result.citations||[],warnings:result.warnings||[],follow_up_questions:result.follow_up_questions||[],confident:result.confident,used_web:result.used_web}}));}catch(e){}
+ }
+ async function send(v,skipFocus,planetCacheKey){
   v=(v||inp.value).trim();if(!v||busy)return;
   add('me','',v);inp.value='';
   if(/^\s*(reset|reset view)\s*$/i.test(v)){var r=document.getElementById('reset');if(r)r.click();add('bot','SpaceMind','Camera reset.');return;}
@@ -1230,18 +1238,22 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   busy=true;go.disabled=true;inp.disabled=true;go.textContent='…';
   var pending=status('Connecting to the SpaceMind research engine…');
   try{
-   await initialize();
-   pending.querySelector('.sm-text').textContent='Researching with SpaceMind’s connected sources…';
-   var result;
-   if(/\b(find|search|show)\s+(me\s+)?(research\s+)?papers?\b/i.test(v)||/\barxiv\s+papers?\b/i.test(v))result=await discovery(v);
-   else result=await ask(v);
+   var result=planetCacheKey?readPlanetOverviewCache(planetCacheKey):null;
+   if(result){pending.querySelector('.sm-text').textContent='Loading the saved planet overview…';}
+   else{
+    await initialize();
+    pending.querySelector('.sm-text').textContent='Researching with SpaceMind’s connected sources…';
+    if(/\b(find|search|show)\s+(me\s+)?(research\s+)?papers?\b/i.test(v)||/\barxiv\s+papers?\b/i.test(v))result=await discovery(v);
+    else result=await ask(v);
+    if(planetCacheKey)writePlanetOverviewCache(planetCacheKey,result);
+   }
    if(selected)result.answer=(result.answer||'')+'\n\nI’ve also moved the observatory camera to '+selected+'.';
    renderResult(result,pending);
   }catch(e){pending.querySelector('.sm-text').textContent='I could not connect to SpaceMind: '+(e.message||'Please try again.');pending.classList.remove('sm-status');}
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);send(detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.'),true);});
+ window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  var dataToggle=document.getElementById('smDataToggle'),dataMenu=document.getElementById('smDataMenu');
  dataToggle.addEventListener('click',function(){var open=dataMenu.hidden;dataMenu.hidden=!open;dataToggle.setAttribute('aria-expanded',open?'true':'false');dataToggle.lastElementChild.textContent=open?'−':'＋';});
