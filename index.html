@@ -1032,7 +1032,7 @@ function voyUpdate(){const now=performance.now(),dt=Math.min(.05,(now-vLast)/100
   fragmentShader:'varying vec3 vColor;void main(){float d=length(gl_PointCoord-vec2(.5));if(d>.5)discard;float glow=1.0-smoothstep(.08,.5,d);gl_FragColor=vec4(vColor,glow*.95);}',
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
  });
- const gxStarField=new THREE.Points(gxGeometry,gxMaterial);gxStarField.name='andromeda-interior-stars';gxStarField.visible=false;gxStarField.frustumCulled=false;gg.add(gxStarField);
+ const gxStarField=new THREE.Points(gxGeometry,gxMaterial);gxStarField.name='andromeda-interior-stars';gxStarField.visible=false;gxStarField.frustumCulled=false;scene.add(gxStarField);gxStarField.position.copy(gg.position);
  const gxOriginalRaycasts=gg.children.filter(o=>o!==gxStarField).map(o=>({object:o,raycast:o.raycast}));
  let gxInside=false,gxEntering=false,gxTransition=null;
  function gxSetSurfacePicking(disabled){gxOriginalRaycasts.forEach(v=>{v.object.raycast=disabled?function(){}:v.raycast;});}
@@ -1172,11 +1172,11 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   }
   return data||{answer:'The research service returned an empty response.',citations:[]};
  }
- async function send(v){
+ async function send(v,skipFocus){
   v=(v||inp.value).trim();if(!v||busy)return;
   add('me','',v);inp.value='';
   if(/^\s*(reset|reset view)\s*$/i.test(v)){var r=document.getElementById('reset');if(r)r.click();add('bot','SpaceMind','Camera reset.');return;}
-  var selected=focusScene(v);
+  var selected=skipFocus?null:focusScene(v);
   busy=true;go.disabled=true;inp.disabled=true;go.textContent='…';
   var pending=status('Connecting to the SpaceMind research engine…');
   try{
@@ -1191,7 +1191,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);send(detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.'));});
+ window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);send(detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.'),!!detail.prompt);});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  document.getElementById('smX').addEventListener('click',function(){toggle(false);btn.focus();});
  go.addEventListener('click',function(){send();});inp.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
