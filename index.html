@@ -858,7 +858,7 @@ document.getElementById('reset').onclick=()=>{camera.position.set(20,135,300);co
 document.getElementById('pause').onclick=()=>{running=!running;document.getElementById('pause').textContent=running?'Ⅱ Pause':'▶ Resume';};
 document.getElementById('tour').onclick=()=>{tour=!tour;document.getElementById('tour').classList.toggle('active',tour);if(tour)focus('planetx');};
 document.getElementById('time').addEventListener('input',e=>{epoch=+e.target.value;document.getElementById('epoch').textContent='EPOCH '+String(epoch).padStart(3,'0');});
-const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();let dx=0,dy=0;canvas.addEventListener('pointerdown',e=>{dx=e.clientX;dy=e.clientY;});canvas.addEventListener('click',e=>{if(Math.hypot(e.clientX-dx,e.clientY-dy)>5)return;const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(selectables,true);if(hits.length){let obj=hits[0].object;while(obj.parent&&!objects[obj.name])obj=obj.parent;if(objects[obj.name]){tour=false;document.getElementById('tour').classList.remove('active');focus(obj.name);window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:document.getElementById('name').textContent}}));}}});
+const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();let dx=0,dy=0;canvas.addEventListener('pointerdown',e=>{dx=e.clientX;dy=e.clientY;});canvas.addEventListener('click',e=>{if(window.planetxAndromedaInterior)return;if(Math.hypot(e.clientX-dx,e.clientY-dy)>5)return;const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(selectables,true);if(hits.length){let obj=hits[0].object;while(obj.parent&&!objects[obj.name])obj=obj.parent;if(objects[obj.name]){tour=false;document.getElementById('tour').classList.remove('active');focus(obj.name);window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:document.getElementById('name').textContent}}));}}});
 function place(){const t=elapsed+epoch*.5;for(const k in objects){const u=objects[k].userData;if(u.R){const a=u.a+u.w*t;objects[k].position.set(Math.cos(a)*u.R,Math.sin(a)*u.R*Math.sin(u.inc),Math.sin(a)*u.R*Math.cos(u.inc));}}
  const e=objects.earth.position;objects.moon.position.set(e.x+Math.cos(t*3.2)*12,e.y+Math.sin(t*3.2)*1.2,e.z+Math.sin(t*3.2)*12);craft.position.set(e.x+Math.cos(t*9)*8.2,e.y+Math.sin(t*4.5)*3,e.z+Math.sin(t*9)*8.2);craft.rotation.y=-t*9;}
 function labels(){for(const k in labs){const o=objects[k],e=labs[k];_v.copy(o.position);_v.y+=o.userData.r*1.25+1.5;_v.project(camera);const vis=showLab&&_v.z<1&&Math.abs(_v.x)<1.1&&Math.abs(_v.y)<1.1;e.style.display=vis?'block':'none';if(vis)e.style.transform='translate('+((_v.x*.5+.5)*innerWidth)+'px,'+((-_v.y*.5+.5)*innerHeight)+'px) translate(-50%,-100%)';}}
@@ -1043,7 +1043,7 @@ function voyUpdate(){const now=performance.now(),dt=Math.min(.05,(now-vLast)/100
    gxBaseFocus(name);
    return;
   }
-  if(gxInside||gxEntering||gxTransition){gxInside=false;gxEntering=false;gxTransition=null;gxStarField.visible=false;gxSetSurfacePicking(false);}
+  if(gxInside||gxEntering||gxTransition){gxInside=false;gxEntering=false;gxTransition=null;window.planetxAndromedaInterior=false;gxStarField.visible=false;gxSetSurfacePicking(false);}
   gxBaseFocus(name);
  };
  const gxRaycaster=new THREE.Raycaster(),gxMouse=new THREE.Vector2();
@@ -1061,9 +1061,9 @@ function voyUpdate(){const now=performance.now(),dt=Math.min(.05,(now-vLast)/100
  function gxInteriorLoop(){
   requestAnimationFrame(gxInteriorLoop);
   if(gxEntering&&!gxTransition&&follow==='andromeda'&&fly<=0){
-   gxEntering=false;follow=null;gxInside=true;gxStarField.visible=true;gxSetSurfacePicking(true);
+   gxEntering=false;follow=null;gxInside=true;window.planetxAndromedaInterior=true;gxStarField.visible=true;gxSetSurfacePicking(true);
    const from=camera.position.clone(),fromTarget=controls.target.clone(),direction=gg.position.clone().sub(from).normalize();
-   gxTransition={start:performance.now(),duration:2600,from:from,targetFrom:fromTarget,to:gg.position.clone().addScaledVector(direction,72),targetTo:gg.position.clone().addScaledVector(direction,230)};
+   gxTransition={start:performance.now(),duration:2600,from:from,targetFrom:fromTarget,to:gg.position.clone().addScaledVector(direction,72),targetTo:gg.position.clone().addScaledVector(direction,-180)};
   }
   if(gxTransition){
    const p=Math.min(1,(performance.now()-gxTransition.start)/gxTransition.duration),e=p*p*(3-2*p);
