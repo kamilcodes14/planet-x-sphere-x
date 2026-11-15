@@ -1047,27 +1047,84 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
  <div class="sm-row"><input class="sm-in" id="smIn" type="text" placeholder="Ask about a planet or object" autocomplete="off" aria-label="Message SpaceMind"><button class="sm-go" id="smGo" type="button">Send</button></div>
  <div class="sm-note">Answers come from the notes in this scene.</div>
 </section>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
- var btn=document.getElementById('smBtn'),panel=document.getElementById('smPanel'),log=document.getElementById('smLog'),inp=document.getElementById('smIn'),chips=document.getElementById('smChips');
- function add(cls,title,text){var d=document.createElement('div');d.className='sm-m '+cls;if(title){var b=document.createElement('b');b.textContent=title;d.appendChild(b);}d.appendChild(document.createTextNode(text));log.appendChild(d);log.scrollTop=log.scrollHeight;}
+ 'use strict';
+ var SUPABASE_URL='https://aqblctjucyxqjmylojgc.supabase.co';
+ var SUPABASE_KEY='sb_publishable_mTWZsvPLjdRCHmHDw1EeOw_VIKpy6V_';
+ var btn=document.getElementById('smBtn'),panel=document.getElementById('smPanel'),log=document.getElementById('smLog'),inp=document.getElementById('smIn'),chips=document.getElementById('smChips'),go=document.getElementById('smGo');
+ var client=null,chatId=null,ready=null,busy=false;
+ function add(cls,title,text){var d=document.createElement('div');d.className='sm-m '+cls;if(title){var b=document.createElement('b');b.textContent=title;d.appendChild(b);}var p=document.createElement('div');p.className='sm-text';p.textContent=text||'';d.appendChild(p);log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+ function status(text){var d=add('bot','SpaceMind',text);d.classList.add('sm-status');return d;}
  function items(){return Array.prototype.slice.call(document.querySelectorAll('.si'));}
- function reply(q){
-  var t=q.toLowerCase().replace(/[^a-z0-9 ]/g,' '),hit=null,len=0;
-  if(/^\s*(reset|reset view)\s*$/.test(t)){var r=document.getElementById('reset');if(r)r.click();add('bot','','Camera reset.');return;}
-  items().forEach(function(b){var n=b.querySelector('.nm').textContent.toLowerCase();if(t.indexOf(n)>-1&&n.length>len){hit=b;len=n.length;}});
-  if(!hit){var names=items().map(function(b){return b.querySelector('.nm').textContent;});add('bot','','I can only answer about bodies in this scene. Try one of these: '+names.join(', ')+'.');return;}
-  hit.click();
-  setTimeout(function(){var g=function(i){var e=document.getElementById(i);return e?e.textContent:'';};add('bot',g('name'),g('desc')+(g('region')?' Region: '+g('region')+'.':'')+' The camera is moving there now.');},60);
+ function focusScene(q){var t=q.toLowerCase().replace(/[^a-z0-9 ]/g,' '),hit=null,len=0;items().forEach(function(b){var el=b.querySelector('.nm');if(!el)return;var n=el.textContent.toLowerCase();if(n&&t.indexOf(n)>-1&&n.length>len){hit=b;len=n.length;}});if(hit){hit.click();return hit.querySelector('.nm').textContent;}return null;}
+ function linkNode(parent,url,label){try{var u=new URL(url);if(u.protocol!=='https:'&&u.protocol!=='http:')return;var a=document.createElement('a');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';a.className='sm-source-link';a.textContent=label||u.hostname;parent.appendChild(a);}catch(e){}}
+ function renderResult(result,holder){
+  holder.classList.remove('sm-status');holder.querySelector('.sm-text').textContent=result.answer||'I could not produce an answer.';
+  var citations=Array.isArray(result.citations)?result.citations:[];
+  if(citations.length){var wrap=document.createElement('div');wrap.className='sm-sources';var head=document.createElement('strong');head.textContent='Sources';wrap.appendChild(head);
+   citations.slice(0,8).forEach(function(c,i){var row=document.createElement('div');row.className='sm-source';var name=document.createElement('span');name.textContent=(i+1)+'. '+(c.source_file||c.title||'Research source');row.appendChild(name);if(c.url)linkNode(row,c.url,'Open source ↗');if(c.year){var yr=document.createElement('small');yr.textContent=' · '+c.year;row.appendChild(yr);}wrap.appendChild(row);});
+   holder.appendChild(wrap);
+  }
+  (result.warnings||[]).slice(0,3).forEach(function(w){var n=document.createElement('small');n.className='sm-warning';n.textContent=w;holder.appendChild(n);});
+  (result.follow_up_questions||[]).slice(0,3).forEach(function(q){var b=document.createElement('button');b.type='button';b.className='sm-chip';b.textContent=q;b.addEventListener('click',function(){send(q);});holder.appendChild(b);});
+  log.scrollTop=log.scrollHeight;
  }
- function send(v){v=(v||inp.value).trim();if(!v)return;add('me','',v);inp.value='';reply(v);}
+ async function initialize(){
+  if(ready)return ready;
+  ready=(async function(){
+   if(!window.supabase||!window.supabase.createClient)throw new Error('The secure connection library could not load. Refresh and try again.');
+   client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+   var sessionResult=await client.auth.getSession(),session=sessionResult.data&&sessionResult.data.session;
+   if(!session){var signed=await client.auth.signInAnonymously();if(signed.error)throw signed.error;}
+   var auth=await client.auth.getUser();if(auth.error||!auth.data.user)throw (auth.error||new Error('Anonymous session could not be created.'));
+   var created=await client.from('chats').insert({user_id:auth.data.user.id,title:'Planet X Observatory'}).select('id').single();
+   if(created.error)throw created.error;chatId=created.data.id;
+   return client;
+  })();
+  return ready;
+ }
+ async function discovery(q){
+  var kind=/arxiv/i.test(q)?'arxiv':'scholar';
+  var {data,error}=await client.functions.invoke('paper-discovery',{body:{kind:kind,query:q.replace(/^(find|search|show)\s+(me\s+)?(papers?|research papers?)\s*(about|on)?\s*/i,'').slice(0,100)}});
+  if(error)throw error;var papers=data&&data.papers||[];
+  var answer=papers.length?'Found '+papers.length+' research records. Here are the first results:':'No research papers were returned for that search.';
+  return {answer:answer,citations:papers.map(function(p){return {source_file:p.title,authors:p.authors,year:p.year,url:p.url,snippet:p.snippet};}),warnings:data&&data.warnings||[]};
+ }
+ async function ask(q){
+  var {data,error}=await client.functions.invoke('research',{body:{question:q,chat_id:chatId,depth:'technical',use_web:null}});
+  if(error){var msg=error.message||'Research request failed.';try{if(error.context){var j=await error.context.json();msg=j.detail||msg;}}catch(e){}throw new Error(msg);}
+  if(data&&data.citations&&data.citations.some(function(c){return c.origin==='spacemind-tool-v1';})){
+   try{var item=data.citations.find(function(c){return c.origin==='spacemind-tool-v1';});var route=JSON.parse(item.snippet);var live=await client.functions.invoke('space-data',{body:route.tool});if(live.error)throw live.error;data.answer=(data.answer||'')+'\n\nLive SpaceMind data:\n'+JSON.stringify(live.data,null,2);data.citations=data.citations.filter(function(c){return c.origin!=='spacemind-tool-v1';});}catch(e){data.warnings=(data.warnings||[]).concat(['The scientific data tool could not complete: '+(e.message||'temporarily unavailable')]);}
+  }
+  return data||{answer:'The research service returned an empty response.',citations:[]};
+ }
+ async function send(v){
+  v=(v||inp.value).trim();if(!v||busy)return;
+  add('me','',v);inp.value='';
+  if(/^\s*(reset|reset view)\s*$/i.test(v)){var r=document.getElementById('reset');if(r)r.click();add('bot','SpaceMind','Camera reset.');return;}
+  var selected=focusScene(v);
+  busy=true;go.disabled=true;inp.disabled=true;go.textContent='…';
+  var pending=status('Connecting to the SpaceMind research engine…');
+  try{
+   await initialize();
+   pending.querySelector('.sm-text').textContent='Researching with SpaceMind’s connected sources…';
+   var result;
+   if(/\b(find|search|show)\s+(me\s+)?(research\s+)?papers?\b/i.test(v)||/\barxiv\s+papers?\b/i.test(v))result=await discovery(v);
+   else result=await ask(v);
+   if(selected)result.answer=(result.answer||'')+'\n\nI’ve also moved the observatory camera to '+selected+'.';
+   renderResult(result,pending);
+  }catch(e){pending.querySelector('.sm-text').textContent='I could not connect to SpaceMind: '+(e.message||'Please try again.');pending.classList.remove('sm-status');}
+  finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
+ }
  ['Earth','Saturn','Planet X','Black Hole'].forEach(function(n){var c=document.createElement('button');c.type='button';c.className='sm-chip';c.textContent=n;c.addEventListener('click',function(){send('Tell me about '+n);});chips.appendChild(c);});
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  document.getElementById('smX').addEventListener('click',function(){toggle(false);btn.focus();});
- document.getElementById('smGo').addEventListener('click',function(){send();});
- inp.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
- add('bot','SpaceMind','Ask about any planet or object in the scene and I’ll fly the camera there.');
+ go.addEventListener('click',function(){send();});inp.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
+ add('bot','SpaceMind','I’m connected to the SpaceMind research engine. Ask about planets, astronomy, research papers, or live space data.');
+ var style=document.createElement('style');style.textContent='.sm-text{white-space:pre-wrap;overflow-wrap:anywhere}.sm-sources{margin-top:10px;padding-top:8px;border-top:1px solid rgba(160,190,220,.16);display:grid;gap:6px}.sm-sources>strong{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.72}.sm-source{display:flex;flex-wrap:wrap;gap:6px;font-size:11px;line-height:1.4}.sm-source-link{color:#9bc9ff;text-decoration:none}.sm-source-link:hover{text-decoration:underline}.sm-warning{display:block;margin-top:7px;color:#d6b77c;font-size:10px;line-height:1.45}.sm-status{opacity:.85}';document.head.appendChild(style);
 })();
 </script>
 </body>
