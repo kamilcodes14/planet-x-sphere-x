@@ -578,6 +578,58 @@ let gt=0,gl=performance.now();
 info.andromeda=['GALAXY · MODEL','Andromeda','A spiral galaxy about 2.5 million light-years away, the nearest large galaxy to the Milky Way. This is an illustrative model: it is not to scale and not an observation.','Far background, behind the black hole (illustrative)','Illustrative simulation'];
 const gxLab=document.createElement('div');gxLab.textContent='Andromeda';document.getElementById('labels').appendChild(gxLab);labs.andromeda=gxLab;
 const gxFocus=focus;focus=function(name){gxFocus(name);if(name==='andromeda')off.set(690*.28,690*.4,690);};
+ // ANDROMEDA STAR INTERIOR - SAFE SCOPED ADDITION
+ // This code intentionally lives inside the same block as "const gg", so it shares the galaxy's scope.
+ const gxCount=1800,gxPos=new Float32Array(gxCount*3),gxCol=new Float32Array(gxCount*3),gxSize=new Float32Array(gxCount),gxMeta=[];
+ const gxKinds=[
+  {name:'O-type blue star',hex:0x83b8ff,w:1,size:4.8},
+  {name:'B-type blue-white star',hex:0xa8d1ff,w:5,size:4.0},
+  {name:'A-type white star',hex:0xe6efff,w:9,size:3.5},
+  {name:'F-type yellow-white star',hex:0xfff2d2,w:13,size:3.0},
+  {name:'G-type yellow star',hex:0xffd66e,w:20,size:2.7},
+  {name:'K-type orange star',hex:0xffa45d,w:24,size:2.4},
+  {name:'M-type red star',hex:0xff6d62,w:28,size:2.1}
+ ];
+ let gxSeed=928374;const gxRand=()=>((gxSeed=(gxSeed*16807)%2147483647)-1)/2147483646;
+ const gxChoose=()=>{let n=gxRand()*100;for(let j=0;j<gxKinds.length;j++){n-=gxKinds[j].w;if(n<=0)return gxKinds[j];}return gxKinds[gxKinds.length-1];};
+ for(let i=0;i<gxCount;i++){
+  const z=gxRand()*2-1,a=gxRand()*Math.PI*2,r=38+Math.pow(gxRand(),.72)*225,h=Math.sqrt(1-z*z),k=i*3,t=gxChoose(),size=t.size*(.72+gxRand()*.62);
+  gxPos[k]=Math.cos(a)*h*r;gxPos[k+1]=z*r*.82;gxPos[k+2]=Math.sin(a)*h*r;
+  const c=new THREE.Color(t.hex);gxCol[k]=c.r;gxCol[k+1]=c.g;gxCol[k+2]=c.b;gxSize[i]=size;
+  gxMeta.push({type:t.name,color:'#'+t.hex.toString(16).padStart(6,'0'),size:size.toFixed(1),brightness:(4+Math.round(size*1.25+gxRand()*2))+'/10'});
+ }
+ const gxGeo=new THREE.BufferGeometry();
+ gxGeo.setAttribute('position',new THREE.BufferAttribute(gxPos,3));
+ gxGeo.setAttribute('color',new THREE.BufferAttribute(gxCol,3));
+ gxGeo.setAttribute('aSize',new THREE.BufferAttribute(gxSize,1));
+ const gxMat=new THREE.ShaderMaterial({
+  uniforms:{uPixelRatio:{value:Math.min(window.devicePixelRatio||1,2)}},
+  vertexShader:'attribute float aSize;attribute vec3 color;varying vec3 vColor;uniform float uPixelRatio;void main(){vColor=color;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(aSize*uPixelRatio*(280.0/max(1.0,-mv.z)),1.2,18.0);}',
+  fragmentShader:'varying vec3 vColor;void main(){float d=length(gl_PointCoord-vec2(.5));if(d>.5)discard;float glow=1.0-smoothstep(.06,.5,d);gl_FragColor=vec4(vColor,glow*.96);}',
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
+ });
+ const gxStars=new THREE.Points(gxGeo,gxMat);gxStars.name='andromeda-interior-stars';gxStars.visible=false;gxStars.frustumCulled=false;gxStars.renderOrder=5;gg.add(gxStars);
+ let gxInside=false,gxDownX=0,gxDownY=0;
+ const gxPickRay=new THREE.Raycaster(),gxPickMouse=new THREE.Vector2();gxPickRay.params.Points.threshold=12;
+ // This listener is registered before the scene's general click handler, so star clicks are handled first.
+ canvas.addEventListener('pointerdown',e=>{gxDownX=e.clientX;gxDownY=e.clientY;},false);
+ canvas.addEventListener('click',e=>{
+  if(!gxInside||!gxStars.visible||Math.hypot(e.clientX-gxDownX,e.clientY-gxDownY)>5)return;
+  const rect=canvas.getBoundingClientRect();gxPickMouse.x=((e.clientX-rect.left)/rect.width)*2-1;gxPickMouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+  gxPickRay.setFromCamera(gxPickMouse,camera);
+  const hits=gxPickRay.intersectObject(gxStars,false);if(!hits.length)return;
+  const index=hits[0].index,meta=gxMeta[index];if(!meta)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const starName='Andromeda Star '+String(index+1).padStart(4,'0');
+  window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:starName,prompt:'Explain this procedurally generated star in the Andromeda interior: '+starName+'. Its illustrative stellar class is '+meta.type+', displayed color '+meta.color+', relative visual size '+meta.size+', and illustrative brightness '+meta.brightness+'. Explain what this stellar class means scientifically, and clearly state that this individual star is a simulated visual placeholder, not an individually observed or catalogued Andromeda star.'}}));
+ },false);
+ const gxFocusBase=focus;
+ focus=function(name){
+  gxFocusBase(name);
+  gxInside=name==='andromeda';gxStars.visible=gxInside;
+  if(gxInside)off.set(145*.28,145*.4,145);
+ };
+
 }
 
 { // ---- PLUTO + CHARON (added; scene code above untouched)
@@ -1118,7 +1170,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var name=e.detail&&e.detail.name;if(!name)return;toggle(true);send('Give me a concise overview of '+name+' and its key scientific facts.');});
+ window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);send(detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.'));});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  document.getElementById('smX').addEventListener('click',function(){toggle(false);btn.focus();});
  go.addEventListener('click',function(){send();});inp.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
