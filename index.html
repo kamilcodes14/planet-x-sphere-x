@@ -91,6 +91,9 @@ body.side-off .side-tab{display:block}
 .sm-data-action:hover{border-color:rgba(255,255,255,.32);background:#171717;color:#fff}
 #planetLanding{position:fixed;z-index:4;top:72px;right:22px;display:none;padding:10px 14px;border:1px solid rgba(139,234,255,.34);border-radius:999px;background:rgba(4,13,24,.88);backdrop-filter:blur(12px);color:#dff8ff;font:600 10px ui-monospace,Consolas,monospace;letter-spacing:.16em;box-shadow:0 10px 34px #0008}
 #planetLanding:hover,#planetLanding.active{border-color:var(--cyan);background:rgba(15,48,65,.94)}
+ #resetAngle{position:fixed;z-index:4;top:116px;right:22px;display:none;padding:10px 14px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(4,13,24,.9);backdrop-filter:blur(12px);color:#fff;font:600 10px ui-monospace,Consolas,monospace;letter-spacing:.14em;box-shadow:0 10px 34px #0008;cursor:pointer}
+ #resetAngle:hover{border-color:var(--cyan);background:rgba(15,48,65,.94)}
+ @media(max-width:760px){#resetAngle{top:98px;right:10px;padding:9px 11px;font-size:9px}}
 @media(max-width:760px){#planetLanding{top:56px;right:10px;padding:9px 11px;font-size:9px}}
 </style>
 </head>
@@ -166,6 +169,7 @@ body.side-off .side-tab{display:block}
 </aside>
 <button class="side-tab" id="sideTab" type="button" aria-label="Show bodies list">☰ BODIES</button>
 <button id="planetLanding" type="button" aria-pressed="false">ENTER LANDING VIEW</button>
+ <button id="resetAngle" type="button" aria-label="Reset camera angle and return to the full observatory view">↶ RESET CAMERA</button>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
@@ -920,8 +924,10 @@ const landingBodies=new Set(['mercury','venus','earth','mars','jupiter','saturn'
 const landingGasWorlds=new Set(['jupiter','saturn','uranus','neptune']);
 const focusBeforeLanding=focus;
 let landingActive=false,landingTarget=null;
-function syncLandingButton(){
+const resetAngleButton=document.getElementById('resetAngle');
+ function syncLandingButton(){
  landingButton.style.display=landingTarget?'block':'none';
+ resetAngleButton.style.display=landingActive?'block':'none';
  landingButton.textContent=landingActive?'EXIT LANDING VIEW':'ENTER LANDING VIEW';
  landingButton.classList.toggle('active',landingActive);
  landingButton.setAttribute('aria-pressed',landingActive?'true':'false');
@@ -960,6 +966,7 @@ document.getElementById('lab').onclick=e=>{showLab=!showLab;e.target.classList.t
 document.getElementById('orb').onclick=e=>{const on=!orbitLines[0].visible;orbitLines.forEach(l=>l.visible=on);e.target.classList.toggle('active',on);};
 document.querySelectorAll('[data-body]').forEach(b=>b.addEventListener('click',()=>{tour=false;document.getElementById('tour').classList.remove('active');focus(b.dataset.body);window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:document.getElementById('name').textContent}}));}));
 document.getElementById('reset').onclick=()=>{camera.position.set(20,135,300);controls.target.set(0,0,0);follow=null;fly=0;tour=false;document.getElementById('tour').classList.remove('active');};
+ resetAngleButton.addEventListener('click',function(){landingActive=false;landingTarget=null;camera.position.set(20,135,300);controls.target.set(0,0,0);follow=null;fly=0;tour=false;document.getElementById('tour').classList.remove('active');syncLandingButton();});
 document.getElementById('pause').onclick=()=>{running=!running;document.getElementById('pause').textContent=running?'Ⅱ Pause':'▶ Resume';};
 document.getElementById('tour').onclick=()=>{tour=!tour;document.getElementById('tour').classList.toggle('active',tour);if(tour)focus('planetx');};
 document.getElementById('time').addEventListener('input',e=>{epoch=+e.target.value;document.getElementById('epoch').textContent='EPOCH '+String(epoch).padStart(3,'0');});
