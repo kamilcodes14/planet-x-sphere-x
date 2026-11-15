@@ -1001,6 +1001,79 @@ function voyUpdate(){const now=performance.now(),dt=Math.min(.05,(now-vLast)/100
  const c=camera.position,len=Math.min(26,vSp*.12),h=WS/2;
  for(let i=0;i<WN;i++){const x=c.x+(((wb[i*3]-c.x)%WS+WS)%WS-h),y=c.y+(((wb[i*3+1]-c.y)%WS+WS)%WS-h),z=c.z+(((wb[i*3+2]-c.z)%WS+WS)%WS-h);wp[i*6]=x;wp[i*6+1]=y;wp[i*6+2]=z;wp[i*6+3]=x-VH.x*len;wp[i*6+4]=y-VH.y*len;wp[i*6+5]=z-VH.z*len;}
  wg.attributes.position.needsUpdate=true;}
+// ---- ANDROMEDA INTERIOR (isolated additive feature; existing scene objects and controls remain intact)
+{
+ const gxStarCount=2600,gxPositions=new Float32Array(gxStarCount*3),gxColors=new Float32Array(gxStarCount*3),gxSizes=new Float32Array(gxStarCount),gxMeta=[];
+ const gxTypes=[
+  {type:'O-type blue star',color:0x83b8ff,weight:1,size:6.8},
+  {type:'B-type blue-white star',color:0xa8d1ff,weight:4,size:5.8},
+  {type:'A-type white star',color:0xe6efff,weight:8,size:4.8},
+  {type:'F-type yellow-white star',color:0xfff2d2,weight:12,size:4.0},
+  {type:'G-type yellow star',color:0xffd66e,weight:20,size:3.4},
+  {type:'K-type orange star',color:0xffa45d,weight:25,size:2.8},
+  {type:'M-type red star',color:0xff6d62,weight:30,size:2.3}
+ ];
+ function gxRandom(){return Math.random();}
+ function gxPickType(){let n=gxRandom()*100;for(let i=0;i<gxTypes.length;i++){n-=gxTypes[i].weight;if(n<=0)return gxTypes[i];}return gxTypes[gxTypes.length-1];}
+ for(let i=0;i<gxStarCount;i++){
+  const u=gxRandom()*2-1,a=gxRandom()*Math.PI*2,r=28+Math.pow(gxRandom(),.72)*205,h=Math.sqrt(1-u*u),k=i*3,t=gxPickType(),jitter=.78+gxRandom()*.44;
+  gxPositions[k]=Math.cos(a)*h*r;gxPositions[k+1]=u*r*.72;gxPositions[k+2]=Math.sin(a)*h*r;
+  const col=new THREE.Color(t.color);gxColors[k]=col.r;gxColors[k+1]=col.g;gxColors[k+2]=col.b;
+  gxSizes[i]=t.size*jitter;
+  gxMeta.push({type:t.type,color:'#'+t.color.toString(16).padStart(6,'0'),visualSize:(t.size*jitter).toFixed(1),brightness:(1+Math.round(t.size*jitter*.7+gxRandom()*3))+'/10'});
+ }
+ const gxGeometry=new THREE.BufferGeometry();
+ gxGeometry.setAttribute('position',new THREE.BufferAttribute(gxPositions,3));
+ gxGeometry.setAttribute('color',new THREE.BufferAttribute(gxColors,3));
+ gxGeometry.setAttribute('aSize',new THREE.BufferAttribute(gxSizes,1));
+ const gxMaterial=new THREE.ShaderMaterial({
+  uniforms:{uPixelRatio:{value:Math.min(devicePixelRatio||1,2)}},
+  vertexShader:'attribute float aSize;attribute vec3 color;varying vec3 vColor;uniform float uPixelRatio;void main(){vColor=color;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(aSize*uPixelRatio*(250.0/max(1.0,-mv.z)),1.2,15.0);}',
+  fragmentShader:'varying vec3 vColor;void main(){float d=length(gl_PointCoord-vec2(.5));if(d>.5)discard;float glow=1.0-smoothstep(.08,.5,d);gl_FragColor=vec4(vColor,glow*.95);}',
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
+ });
+ const gxStarField=new THREE.Points(gxGeometry,gxMaterial);gxStarField.name='andromeda-interior-stars';gxStarField.visible=false;gxStarField.frustumCulled=false;gg.add(gxStarField);
+ const gxOriginalRaycasts=gg.children.filter(o=>o!==gxStarField).map(o=>({object:o,raycast:o.raycast}));
+ let gxInside=false,gxEntering=false,gxTransition=null;
+ function gxSetSurfacePicking(disabled){gxOriginalRaycasts.forEach(v=>{v.object.raycast=disabled?function(){}:v.raycast;});}
+ const gxBaseFocus=focus;
+ focus=function(name){
+  if(name==='andromeda'){
+   gxInside=false;gxEntering=true;gxTransition=null;gxStarField.visible=false;gxSetSurfacePicking(false);
+   gxBaseFocus(name);
+   return;
+  }
+  if(gxInside||gxEntering||gxTransition){gxInside=false;gxEntering=false;gxTransition=null;gxStarField.visible=false;gxSetSurfacePicking(false);}
+  gxBaseFocus(name);
+ };
+ const gxRaycaster=new THREE.Raycaster(),gxMouse=new THREE.Vector2();
+ gxRaycaster.params.Points.threshold=9;
+ canvas.addEventListener('click',function(e){
+  if(!gxInside)return;
+  const rect=canvas.getBoundingClientRect();gxMouse.x=((e.clientX-rect.left)/rect.width)*2-1;gxMouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+  gxRaycaster.setFromCamera(gxMouse,camera);
+  const hits=gxRaycaster.intersectObject(gxStarField,false);
+  if(!hits.length)return;
+  const i=hits[0].index;if(i===undefined||!gxMeta[i])return;
+  const m=gxMeta[i],name='Andromeda Star '+String(i+1).padStart(4,'0');
+  window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:name,prompt:'Explain this procedurally simulated star in the Andromeda interior: '+name+'. Its generated visual classification is '+m.type+', displayed color '+m.color+', relative visual size '+m.visualSize+', and illustrative brightness '+m.brightness+'. Clearly explain that this is a fictional visual placeholder, not an individually observed or catalogued Andromeda star. Describe what this stellar class means scientifically.'}}));
+ },false);
+ function gxInteriorLoop(){
+  requestAnimationFrame(gxInteriorLoop);
+  if(gxEntering&&!gxTransition&&follow==='andromeda'&&fly<=0){
+   gxEntering=false;follow=null;gxInside=true;gxStarField.visible=true;gxSetSurfacePicking(true);
+   const from=camera.position.clone(),fromTarget=controls.target.clone(),direction=gg.position.clone().sub(from).normalize();
+   gxTransition={start:performance.now(),duration:2600,from:from,targetFrom:fromTarget,to:gg.position.clone().addScaledVector(direction,72),targetTo:gg.position.clone().addScaledVector(direction,230)};
+  }
+  if(gxTransition){
+   const p=Math.min(1,(performance.now()-gxTransition.start)/gxTransition.duration),e=p*p*(3-2*p);
+   camera.position.lerpVectors(gxTransition.from,gxTransition.to,e);
+   controls.target.lerpVectors(gxTransition.targetFrom,gxTransition.targetTo,e);
+   if(p>=1){gxTransition=null;gxInside=true;}
+  }
+ }
+ gxInteriorLoop();
+}
 let lastTour=0;function animate(){requestAnimationFrame(animate);
  if(running){elapsed+=.004;for(const k in objects){const u=objects[k].userData;if(u.mesh)u.mesh.rotation.y+=u.sp;if(u.cl)u.cl.rotation.y+=.0014;}sunU.t.value=elapsed*10;belt.rotation.y+=.0004;objects.planetx.userData.am.uniforms.k.value=1.4+Math.sin(elapsed*6)*.3;
   if(tour&&elapsed-lastTour>12){lastTour=elapsed;const n=['earth','jupiter','saturn','neptune','pluto','planetx'];focus(n[Math.floor(elapsed/12)%n.length]);}}
@@ -1118,7 +1191,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var name=e.detail&&e.detail.name;if(!name)return;toggle(true);send('Give me a concise overview of '+name+' and its key scientific facts.');});
+ window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);send(detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.'));});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  document.getElementById('smX').addEventListener('click',function(){toggle(false);btn.focus();});
  go.addEventListener('click',function(){send();});inp.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
