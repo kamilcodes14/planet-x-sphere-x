@@ -82,6 +82,13 @@ body.side-off .side-tab{display:block}
 .sm-go{padding:0 14px;border:0;border-radius:9px;background:#f4f1ec;color:#1a1a1e;font:600 12px Inter,system-ui,sans-serif;cursor:pointer}
 .sm-note{padding:0 14px 10px;font-size:10px;color:#6f6f77}
 @media(max-width:760px){.sm-btn{right:10px;bottom:17px}.sm-panel{right:10px;bottom:70px;width:min(330px,calc(100vw - 20px))}}
+.sm-data{padding:9px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sm-data-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:#080808;color:#f4f1ec;font:600 10px ui-monospace,Consolas,monospace;letter-spacing:.16em}
+.sm-data-toggle:hover,.sm-data-toggle[aria-expanded="true"]{border-color:rgba(255,255,255,.38);background:#141414}
+.sm-data-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+.sm-data-menu[hidden]{display:none}
+.sm-data-action{min-width:0;padding:8px 7px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:#0b0b0b;color:#cfcfd4;text-align:left;font:10px Inter,system-ui,sans-serif;line-height:1.35;letter-spacing:0}
+.sm-data-action:hover{border-color:rgba(255,255,255,.32);background:#171717;color:#fff}
 #planetLanding{position:fixed;z-index:4;top:72px;right:22px;display:none;padding:10px 14px;border:1px solid rgba(139,234,255,.34);border-radius:999px;background:rgba(4,13,24,.88);backdrop-filter:blur(12px);color:#dff8ff;font:600 10px ui-monospace,Consolas,monospace;letter-spacing:.16em;box-shadow:0 10px 34px #0008}
 #planetLanding:hover,#planetLanding.active{border-color:var(--cyan);background:rgba(15,48,65,.94)}
 @media(max-width:760px){#planetLanding{top:56px;right:10px;padding:9px 11px;font-size:9px}}
@@ -1140,6 +1147,17 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
 <button class="sm-btn" id="smBtn" type="button" aria-expanded="false" aria-controls="smPanel"><span class="sm-logo"></span>SpaceMind</button>
 <section class="sm-panel" id="smPanel" aria-label="SpaceMind chat">
  <div class="sm-head"><span class="sm-logo"></span>SpaceMind<button class="sm-x" id="smX" type="button" aria-label="Close chat">×</button></div>
+ <div class="sm-data">
+  <button class="sm-data-toggle" id="smDataToggle" type="button" aria-expanded="false" aria-controls="smDataMenu"><span>LIVE SPACE DATA</span><span aria-hidden="true">＋</span></button>
+  <div class="sm-data-menu" id="smDataMenu" hidden>
+   <button class="sm-data-action" type="button" data-space-query="Check current solar activity using the connected NOAA space-weather and NASA DONKI data. Summarize recent solar flares, geomagnetic Kp and alerts, and CME records with timestamps and source caveats.">☀ Solar activity</button>
+   <button class="sm-data-action" type="button" data-space-query="Show NASA near-Earth asteroid close approaches over the next seven calendar days. Include object names, closest approach dates, miss distances, relative speeds, estimated sizes and explain that hazard classification is not an impact prediction.">☄ Near-Earth asteroids</button>
+   <button class="sm-data-action" type="button" data-space-query="Use NASA/JPL Horizons to retrieve current-epoch planetary positions. Use numeric NAIF IDs and UTC, query one target at a time, and report the coordinate frame, units and observer. Do not invent any positions; if the available tool cannot return all planets in one request, explain that clearly.">◎ Planetary positions</button>
+   <button class="sm-data-action" type="button" data-space-query="I want the latest telescope archive observations. Use the connected MAST or ESA archive tools if I provide sky coordinates. If coordinates (right ascension, declination and search radius) are required, ask me for them before querying; do not invent coordinates or observations.">⌕ Telescope observations</button>
+   <button class="sm-data-action" type="button" data-space-query="Search the NASA Exoplanet Archive for confirmed exoplanets. If the connected archive tool requires a planet or host-star name, ask me what target to search rather than inventing a query or claiming an unsupported latest-discoveries feed. Distinguish confirmed planets from candidates.">✦ Confirmed exoplanets</button>
+   <button class="sm-data-action" type="button" data-space-query="Show upcoming rocket launches from the connected launch schedule. Include launch provider, vehicle or mission, NET date, launch site and status, and note that schedules can change and this is not a NASA operations feed.">↗ Upcoming launches</button>
+  </div>
+ </div>
  <div class="sm-log" id="smLog" aria-live="polite"></div>
  <div class="sm-row"><input class="sm-in" id="smIn" type="text" placeholder="Ask about a planet or object" autocomplete="off" aria-label="Message SpaceMind"><button class="sm-go" id="smGo" type="button">Send</button></div>
  <div class="sm-note">Connected to SpaceMind AI · Research · Live space data</div>
@@ -1218,6 +1236,9 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
  window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);send(detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.'),true);});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
+ var dataToggle=document.getElementById('smDataToggle'),dataMenu=document.getElementById('smDataMenu');
+ dataToggle.addEventListener('click',function(){var open=dataMenu.hidden;dataMenu.hidden=!open;dataToggle.setAttribute('aria-expanded',open?'true':'false');dataToggle.lastElementChild.textContent=open?'−':'＋';});
+ Array.prototype.forEach.call(dataMenu.querySelectorAll('[data-space-query]'),function(action){action.addEventListener('click',function(){var query=action.getAttribute('data-space-query');dataMenu.hidden=true;dataToggle.setAttribute('aria-expanded','false');dataToggle.lastElementChild.textContent='＋';send(query,true);});});
  document.getElementById('smX').addEventListener('click',function(){toggle(false);btn.focus();});
  go.addEventListener('click',function(){send();});inp.addEventListener('keydown',function(e){if(e.key==='Enter')send();});
  add('bot','SpaceMind','I’m connected to the SpaceMind research engine. Ask about planets, astronomy, research papers, or live space data.');
