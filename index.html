@@ -664,6 +664,11 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   sendContext(key,name);
  }
  frame.addEventListener('load',function(){frame.dataset.ready='1';if(pending)frame.contentWindow.postMessage(pending,new URL(frame.src).origin);});
+ window.addEventListener('message',function(event){
+  if(event.source!==frame.contentWindow||event.origin!==new URL(frame.src).origin)return;
+  if(event.data&&event.data.type==='SPACEMIND_READY'&&pending)
+   frame.contentWindow.postMessage(pending,event.origin);
+ });
  new MutationObserver(selectCurrent).observe(nameEl,{childList:true,characterData:true,subtree:true});
 })();
 </script>
