@@ -633,5 +633,39 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
  <button type="button" popovertarget="px-space-mind-panel" popovertargetaction="hide" aria-label="Close SpaceMind">Close ×</button></div>
  <iframe title="SpaceMind research workspace" src="https://spacemind-frontend.vercel.app/" allow="clipboard-read; clipboard-write; identity-credentials-get" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </section>
+<style id="px-sm-facts-style">#px-sm-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 16px;background:#07101d;border-bottom:1px solid #ffffff20;font:12px/1.4 system-ui;color:#d9eafa}#px-sm-facts .px-fact{min-width:0;padding:8px 10px;border:1px solid #8bcfff25;border-radius:9px;background:#0b1b2b}#px-sm-facts small{display:block;color:#83b5d7;font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}#px-sm-facts strong{display:block;font-size:12px;font-weight:600;overflow-wrap:anywhere}#px-sm-facts .px-facts-heading{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:.12em;font-size:11px}#px-sm-facts .px-facts-heading span{color:#83b5d7;font-weight:400;letter-spacing:0}#px-space-mind-panel iframe{height:calc(100% - 218px)}@media(max-width:650px){#px-sm-facts{grid-template-columns:repeat(2,minmax(0,1fr));padding:9px;gap:6px}#px-space-mind-panel iframe{height:calc(100% - 260px)}}</style>
+<div id="px-sm-facts" aria-live="polite"><div class="px-facts-heading">✦ SELECT A CELESTIAL BODY <span>Instant reference facts</span></div></div>
+<script id="px-spacemind-context">
+(function(){
+ 'use strict';
+ const FACTS={"sun":["STAR","~5,500°C photosphere","~15 million°C core","1.39 million km diameter","Hydrogen and helium","~4.6 billion years"],"mercury":["ROCKY PLANET","~167°C mean surface","−180 to 430°C range","4,879 km diameter","Rocky / metal-rich","~4.5 billion years"],"venus":["ROCKY PLANET","~465°C mean surface","~92 bar surface pressure","12,104 km diameter","96.5% CO₂ atmosphere","~4.5 billion years"],"earth":["ROCKY PLANET","~15°C global mean","1 bar sea-level pressure","12,742 km diameter","Nitrogen / oxygen","~4.54 billion years"],"moon":["NATURAL SATELLITE","Highly variable (~−20°C average)","No substantial atmosphere","3,475 km diameter","Silicate rock","~4.5 billion years"],"mars":["ROCKY PLANET","~−65°C mean surface","Thin CO₂ atmosphere","6,779 km diameter","Basaltic rock / iron oxides","~4.6 billion years"],"jupiter":["GAS GIANT","Cloud tops ~−110°C","Hydrogen / helium","139,820 km diameter","Hydrogen / helium","~4.6 billion years"],"saturn":["GAS GIANT","Cloud tops ~−140°C","Hydrogen / helium","116,460 km diameter","Hydrogen / helium","~4.5 billion years"],"uranus":["ICE GIANT","~−195°C cloud tops","Hydrogen / helium / methane","50,724 km diameter","Water / ammonia / methane ices","~4.5 billion years"],"neptune":["ICE GIANT","~−200°C cloud tops","Hydrogen / helium / methane","49,244 km diameter","Water / ammonia / methane ices","~4.5 billion years"],"planetx":["HYPOTHETICAL","Unknown — not detected","Unknown","Unknown","Unknown","Unconfirmed hypothesis"],"pluto":["DWARF PLANET","~−230°C average","Very thin nitrogen atmosphere","2,377 km diameter","Water ice / nitrogen / methane ice","~4.5 billion years"],"charon":["PLUTO'S MOON","~−220°C estimated","Negligible atmosphere","1,212 km diameter","Water ice / rock","~4.5 billion years"],"spherex":["SPACECRAFT","Not applicable","Not applicable","~3.2 m tall","NASA infrared space telescope","Launched March 2025"],"blackhole":["BLACK HOLE MODEL","Not a surface temperature","Not applicable","Model only — not to scale","Accretion disk is illustrative","Astrophysical object class"],"pulsar":["NEUTRON STAR MODEL","Surface ~millions °C (typical)","Not applicable","Model only — not to scale","Ultra-dense neutron star","Remnant of a massive star"],"andromeda":["GALAXY","Not a single temperature","Not applicable","~220,000 light-years across","Stars, gas, dust, dark matter","Formation began billions of years ago"]};
+ const nameEl=document.getElementById('name'),panel=document.getElementById('px-space-mind-panel');
+ const frame=panel&&panel.querySelector('iframe'),factsBox=document.getElementById('px-sm-facts');
+ const launch=document.getElementById('px-space-mind-launch');
+ if(!nameEl||!panel||!frame||!factsBox)return;
+ let lastName='',pending=null;
+ const labels={sun:'Sun',mercury:'Mercury',venus:'Venus',earth:'Earth',moon:'Moon',mars:'Mars',jupiter:'Jupiter',saturn:'Saturn',uranus:'Uranus',neptune:'Neptune',planetx:'Planet X',pluto:'Pluto',charon:'Charon',spherex:'SPHEREx',blackhole:'Black Hole',pulsar:'Pulsar',andromeda:'Andromeda'};
+ const fields=['Category','Temperature','Atmosphere / environment','Diameter / scale','Composition','Age / status'];
+ function renderFacts(key,name){
+  const data=FACTS[key]||['CELESTIAL OBJECT','See research overview','See research overview','See research overview','See research overview','See research overview'];
+  factsBox.replaceChildren();
+  const heading=document.createElement('div');heading.className='px-facts-heading';heading.textContent='✦ '+name.toUpperCase()+' · QUICK FACTS';factsBox.append(heading);
+  fields.forEach((label,i)=>{const card=document.createElement('div');card.className='px-fact';const small=document.createElement('small');small.textContent=label;const strong=document.createElement('strong');strong.textContent=data[i]||'Not available';card.append(small,strong);factsBox.append(card);});
+ }
+ function sendContext(key,name){
+  pending={type:'SPACEMIND_PLANET_CONTEXT',body:{id:key,name:name,category:(FACTS[key]||[])[0]||'Celestial object',facts:FACTS[key]||[]},prompt:'Give me a concise but scientifically rigorous overview of '+name+'. Cover its formation, physical properties, composition, atmosphere or environment, orbital/dynamical context, exploration and latest scientific understanding. Use retrieved scientific papers and reliable sources; cite each key claim with clickable paper titles, publication years and direct source links. Clearly distinguish measured facts, estimates and hypotheses. If this is a spacecraft, galaxy, black hole model or hypothetical object, tailor the overview accordingly and do not present simulated properties as observations.'};
+  if(frame.dataset.ready==='1')frame.contentWindow.postMessage(pending,new URL(frame.src).origin);
+ }
+ function selectCurrent(){
+  const name=nameEl.textContent.trim();if(!name||name===lastName)return;
+  const key=Object.keys(labels).find(k=>labels[k]===name);if(!key)return;
+  lastName=name;renderFacts(key,name);
+  if(!panel.matches(':popover-open')){try{panel.showPopover();}catch(e){launch.click();}}
+  sendContext(key,name);
+ }
+ frame.addEventListener('load',function(){frame.dataset.ready='1';if(pending)frame.contentWindow.postMessage(pending,new URL(frame.src).origin);});
+ new MutationObserver(selectCurrent).observe(nameEl,{childList:true,characterData:true,subtree:true});
+})();
+</script>
 </body>
 </html>
