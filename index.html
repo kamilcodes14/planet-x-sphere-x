@@ -1191,7 +1191,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   }
   (result.warnings||[]).slice(0,3).forEach(function(w){var n=document.createElement('small');n.className='sm-warning';n.textContent=w;holder.appendChild(n);});
   (result.follow_up_questions||[]).slice(0,3).forEach(function(q){var b=document.createElement('button');b.type='button';b.className='sm-chip';b.textContent=q;b.addEventListener('click',function(){send(q);});holder.appendChild(b);});
-  log.scrollTop=log.scrollHeight;
+  var answerTop=holder.getBoundingClientRect().top-log.getBoundingClientRect().top+log.scrollTop;log.scrollTop=Math.max(0,answerTop-14);
  }
  async function initialize(){
   if(ready)return ready;
