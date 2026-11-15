@@ -927,7 +927,7 @@ let landingActive=false,landingTarget=null;
 const resetAngleButton=document.getElementById('resetAngle');
  function syncLandingButton(){
  landingButton.style.display=landingTarget?'block':'none';
- resetAngleButton.style.display=landingActive?'block':'none';
+ resetAngleButton.style.display=landingTarget?'block':'none';
  landingButton.textContent=landingActive?'EXIT LANDING VIEW':'ENTER LANDING VIEW';
  landingButton.classList.toggle('active',landingActive);
  landingButton.setAttribute('aria-pressed',landingActive?'true':'false');
