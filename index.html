@@ -1037,10 +1037,16 @@ function voyUpdate(){const now=performance.now(),dt=Math.min(.05,(now-vLast)/100
  let gxInside=false,gxEntering=false,gxTransition=null;
  function gxSetSurfacePicking(disabled){gxOriginalRaycasts.forEach(v=>{v.object.raycast=disabled?function(){}:v.raycast;});}
  const gxBaseFocus=focus;
+ function gxBeginInteriorTransition(){
+  const from=camera.position.clone(),fromTarget=controls.target.clone(),direction=gg.position.clone().sub(from).normalize();
+  follow=null;fly=0;gxEntering=false;gxInside=true;window.planetxAndromedaInterior=true;gxStarField.visible=true;gxSetSurfacePicking(true);
+  gxTransition={start:performance.now(),duration:3200,from:from,targetFrom:fromTarget,to:gg.position.clone().addScaledVector(direction,72),targetTo:gg.position.clone().addScaledVector(direction,-180)};
+ }
  focus=function(name){
   if(name==='andromeda'){
-   gxInside=false;gxEntering=true;gxTransition=null;gxStarField.visible=false;gxSetSurfacePicking(false);
+   gxInside=false;gxEntering=false;gxTransition=null;window.planetxAndromedaInterior=false;gxStarField.visible=false;gxSetSurfacePicking(false);
    gxBaseFocus(name);
+   gxBeginInteriorTransition();
    return;
   }
   if(gxInside||gxEntering||gxTransition){gxInside=false;gxEntering=false;gxTransition=null;window.planetxAndromedaInterior=false;gxStarField.visible=false;gxSetSurfacePicking(false);}
@@ -1060,11 +1066,6 @@ function voyUpdate(){const now=performance.now(),dt=Math.min(.05,(now-vLast)/100
  },false);
  function gxInteriorLoop(){
   requestAnimationFrame(gxInteriorLoop);
-  if(gxEntering&&!gxTransition&&follow==='andromeda'&&fly<=0){
-   gxEntering=false;follow=null;gxInside=true;window.planetxAndromedaInterior=true;gxStarField.visible=true;gxSetSurfacePicking(true);
-   const from=camera.position.clone(),fromTarget=controls.target.clone(),direction=gg.position.clone().sub(from).normalize();
-   gxTransition={start:performance.now(),duration:2600,from:from,targetFrom:fromTarget,to:gg.position.clone().addScaledVector(direction,72),targetTo:gg.position.clone().addScaledVector(direction,-180)};
-  }
   if(gxTransition){
    const p=Math.min(1,(performance.now()-gxTransition.start)/gxTransition.duration),e=p*p*(3-2*p);
    camera.position.lerpVectors(gxTransition.from,gxTransition.to,e);
