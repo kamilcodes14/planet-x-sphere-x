@@ -63,7 +63,7 @@ body.side-off .side-tab{display:block}
 .sm-btn:hover{background:#141416;border-color:rgba(255,255,255,.3)}
 .sm-btn:focus-visible,.sm-in:focus-visible,.sm-chip:focus-visible,.sm-x:focus-visible,.sm-go:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
 .sm-logo{width:16px;height:16px;flex:none;border:1px solid #f4f1ec;background:conic-gradient(#f4f1ec 0 25%,#000 0 50%,#f4f1ec 0 75%,#000 0)}
-.sm-panel{position:fixed;z-index:5;right:22px;bottom:76px;width:330px;height:min(470px,calc(100vh - 150px));display:none;flex-direction:column;background:rgba(0,0,0,.94);border:1px solid rgba(255,255,255,.12);border-radius:14px;backdrop-filter:blur(14px);box-shadow:0 18px 60px #000b;color:#f4f1ec}
+.sm-panel{position:fixed;z-index:5;right:22px;bottom:76px;width:400px;height:min(620px,calc(100vh - 120px));display:none;flex-direction:column;background:rgba(0,0,0,.94);border:1px solid rgba(255,255,255,.12);border-radius:14px;backdrop-filter:blur(14px);box-shadow:0 18px 60px #000b;color:#f4f1ec}
 .sm-panel.open{display:flex}
 .sm-head{display:flex;align-items:center;gap:10px;padding:13px 12px 12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.2em}
 .sm-x{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:transparent;color:#a7a7ad;font-size:14px;cursor:pointer}
@@ -81,7 +81,7 @@ body.side-off .side-tab{display:block}
 .sm-in::placeholder{color:#7d7d85}
 .sm-go{padding:0 14px;border:0;border-radius:9px;background:#f4f1ec;color:#1a1a1e;font:600 12px Inter,system-ui,sans-serif;cursor:pointer}
 .sm-note{padding:0 14px 10px;font-size:10px;color:#6f6f77}
-@media(max-width:760px){.sm-btn{right:10px;bottom:17px}.sm-panel{right:10px;bottom:70px;width:min(330px,calc(100vw - 20px))}}
+@media(max-width:760px){.sm-btn{right:10px;bottom:17px}.sm-panel{right:10px;bottom:70px;width:min(400px,calc(100vw - 20px));height:min(620px,calc(100vh - 100px))}}
 .sm-data{padding:9px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
 .sm-data-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:#080808;color:#f4f1ec;font:600 10px ui-monospace,Consolas,monospace;letter-spacing:.16em}
 .sm-data-toggle:hover,.sm-data-toggle[aria-expanded="true"]{border-color:rgba(255,255,255,.38);background:#141414}
