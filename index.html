@@ -1043,7 +1043,6 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
 <section class="sm-panel" id="smPanel" aria-label="SpaceMind chat">
  <div class="sm-head"><span class="sm-logo"></span>SpaceMind<button class="sm-x" id="smX" type="button" aria-label="Close chat">×</button></div>
  <div class="sm-log" id="smLog" aria-live="polite"></div>
- <div class="sm-chips" id="smChips"></div>
  <div class="sm-row"><input class="sm-in" id="smIn" type="text" placeholder="Ask about a planet or object" autocomplete="off" aria-label="Message SpaceMind"><button class="sm-go" id="smGo" type="button">Send</button></div>
  <div class="sm-note">Connected to SpaceMind AI · Research · Live space data</div>
 </section>
@@ -1053,7 +1052,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
  'use strict';
  var SUPABASE_URL='https://aqblctjucyxqjmylojgc.supabase.co';
  var SUPABASE_KEY='sb_publishable_mTWZsvPLjdRCHmHDw1EeOw_VIKpy6V_';
- var btn=document.getElementById('smBtn'),panel=document.getElementById('smPanel'),log=document.getElementById('smLog'),inp=document.getElementById('smIn'),chips=document.getElementById('smChips'),go=document.getElementById('smGo');
+ var btn=document.getElementById('smBtn'),panel=document.getElementById('smPanel'),log=document.getElementById('smLog'),inp=document.getElementById('smIn'),go=document.getElementById('smGo');
  var client=null,chatId=null,ready=null,busy=false;
  function add(cls,title,text){var d=document.createElement('div');d.className='sm-m '+cls;if(title){var b=document.createElement('b');b.textContent=title;d.appendChild(b);}var p=document.createElement('div');p.className='sm-text';p.textContent=text||'';d.appendChild(p);log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
  function status(text){var d=add('bot','SpaceMind',text);d.classList.add('sm-status');return d;}
@@ -1118,7 +1117,6 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   }catch(e){pending.querySelector('.sm-text').textContent='I could not connect to SpaceMind: '+(e.message||'Please try again.');pending.classList.remove('sm-status');}
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
- ['Earth','Saturn','Planet X','Black Hole'].forEach(function(n){var c=document.createElement('button');c.type='button';c.className='sm-chip';c.textContent=n;c.addEventListener('click',function(){send('Tell me about '+n);});chips.appendChild(c);});
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  document.getElementById('smX').addEventListener('click',function(){toggle(false);btn.focus();});
