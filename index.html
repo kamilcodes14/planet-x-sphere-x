@@ -1408,11 +1408,13 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   window.addEventListener('planetx:object-selected',function(e){
    var detail=e.detail||{},name=detail.name;if(!name)return;
    selectedObject={name:name,prompt:detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.')};
-   document.getElementById('objectInfoType').textContent=document.getElementById('type').textContent||'SPACE OBJECT';
-   document.getElementById('objectInfoName').textContent=document.getElementById('name').textContent||name;
-   document.getElementById('objectInfoDesc').textContent=document.getElementById('desc').textContent||'Scientific overview not available.';
-   document.getElementById('objectInfoRegion').textContent=document.getElementById('region').textContent||'—';
-   document.getElementById('objectInfoData').textContent=document.getElementById('data').textContent||'—';
+   var currentName=document.getElementById('name').textContent||'';
+   var isCustomTarget=currentName!==name;
+   document.getElementById('objectInfoType').textContent=isCustomTarget?'STAR · PROCEDURAL MODEL':(document.getElementById('type').textContent||'SPACE OBJECT');
+   document.getElementById('objectInfoName').textContent=isCustomTarget?name:currentName;
+   document.getElementById('objectInfoDesc').textContent=isCustomTarget?'A procedurally generated background star used for visual exploration. Its displayed properties are illustrative, not an individually observed or catalogued star.':(document.getElementById('desc').textContent||'Scientific overview not available.');
+   document.getElementById('objectInfoRegion').textContent=isCustomTarget?'Andromeda (model)':(document.getElementById('region').textContent||'—');
+   document.getElementById('objectInfoData').textContent=isCustomTarget?'Illustrative model':(document.getElementById('data').textContent||'—');
    objectCard.classList.add('open');
   });
   researchObjectButton.addEventListener('click',function(){
