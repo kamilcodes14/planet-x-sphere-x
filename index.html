@@ -106,6 +106,18 @@ body.side-off .side-tab{display:block}
 #marsSurfaceInfo .mars-meta strong{display:block;color:#f1f7ff;font-size:11px;margin-top:3px}
 #marsSurfaceInfo .mars-model-note{margin-top:9px;color:#8297ad;font-size:9px;line-height:1.45}
 @media(max-width:760px){#marsSurfaceInfo{left:10px;right:10px;bottom:68px;width:auto;padding:13px 14px}#marsSurfaceInfo h2{font-size:17px}}
+
+/* Contextual object facts card; SpaceMind runs only after an explicit research click */
+#objectInfoCard{position:fixed;z-index:6;right:22px;top:50%;transform:translateY(-50%);width:min(320px,calc(100vw - 40px));padding:17px 18px;border:1px solid rgba(139,234,255,.22);border-radius:14px;background:rgba(4,10,18,.9);backdrop-filter:blur(16px);box-shadow:0 18px 60px #000b;color:#eaf4ff;display:none;pointer-events:auto}
+#objectInfoCard.open{display:block}
+#objectInfoCard .object-kicker{font:600 9px ui-monospace,Consolas,monospace;letter-spacing:.2em;color:#8beaff}
+#objectInfoCard h2{margin:8px 0 7px;font-size:20px;font-weight:650;letter-spacing:-.02em}
+#objectInfoCard p{margin:0;color:#b5c6d8;font-size:11px;line-height:1.65}
+#objectInfoCard .object-meta{display:flex;justify-content:space-between;gap:12px;margin-top:11px;padding-top:9px;border-top:1px solid #ffffff18;color:#9eb1c6;font-size:9px}
+#objectInfoCard .object-meta strong{display:block;margin-top:3px;color:#f1f7ff;font-size:10px;font-weight:600}
+#objectResearchBtn{width:100%;margin-top:13px;padding:10px 12px;border:1px solid rgba(139,234,255,.35);border-radius:8px;background:rgba(15,48,65,.7);color:#dff8ff;font:600 10px ui-monospace,Consolas,monospace;letter-spacing:.06em;text-align:center}
+#objectResearchBtn:hover{border-color:var(--cyan);background:rgba(15,65,85,.92)}
+@media(max-width:760px){#objectInfoCard{right:10px;top:auto;bottom:72px;transform:none;width:min(285px,calc(100vw - 20px));padding:13px 14px}#objectInfoCard h2{font-size:17px}}
 </style>
 </head>
 <body>
@@ -655,7 +667,7 @@ const gxFocus=focus;focus=function(name){gxFocus(name);if(name==='andromeda')off
   const index=hits[0].index,meta=gxMeta[index];if(!meta)return;
   e.preventDefault();e.stopImmediatePropagation();
   const starName='Andromeda Star '+String(index+1).padStart(4,'0');
-  window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:starName,prompt:'Explain this procedurally generated star in the Andromeda interior: '+starName+'. Its illustrative stellar class is '+meta.type+', displayed color '+meta.color+', relative visual size '+meta.size+', and illustrative brightness '+meta.brightness+'. Explain what this stellar class means scientifically, and clearly state that this individual star is a simulated visual placeholder, not an individually observed or catalogued Andromeda star.'}}));
+  window.dispatchEvent(new CustomEvent('planetx:object-selected',{detail:{name:starName,prompt:'Explain this procedurally generated star in the Andromeda interior: '+starName+'. Its illustrative stellar class is '+meta.type+', displayed color '+meta.color+', relative visual size '+meta.size+', and illustrative brightness '+meta.brightness+'. Explain what this stellar class means scientifically, and clearly state that this individual star is a simulated visual placeholder, not an individually observed or catalogued Andromeda star.'}}));
  },false);
  const gxFocusBase=focus;
  focus=function(name){
@@ -1090,18 +1102,18 @@ landingButton.addEventListener('click',function(){
   prompt='I am entering a simulated landing-level view of '+displayName+' in the Planet X observatory. Describe the surface features visible in this educational 3D model, the real environment, gravity, atmosphere, and what a lander would need to survive there. Distinguish model visuals from actual mission imagery.';
  }
  if(landingTarget==='planetx')prompt+=' Planet X is hypothetical and unconfirmed; clearly state that this is a fictional educational simulation, not a detected world.';
- window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:displayName,prompt:prompt}}));
+ window.dispatchEvent(new CustomEvent('planetx:object-selected',{detail:{name:displayName,prompt:prompt}}));
 });
 syncLandingButton();
 document.getElementById('lab').onclick=e=>{showLab=!showLab;e.target.classList.toggle('active',showLab);};
 document.getElementById('orb').onclick=e=>{const on=!orbitLines[0].visible;orbitLines.forEach(l=>l.visible=on);e.target.classList.toggle('active',on);};
-document.querySelectorAll('[data-body]').forEach(b=>b.addEventListener('click',()=>{tour=false;document.getElementById('tour').classList.remove('active');focus(b.dataset.body);window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:document.getElementById('name').textContent}}));}));
+document.querySelectorAll('[data-body]').forEach(b=>b.addEventListener('click',()=>{tour=false;document.getElementById('tour').classList.remove('active');focus(b.dataset.body);window.dispatchEvent(new CustomEvent('planetx:object-selected',{detail:{name:document.getElementById('name').textContent}}));}));
 document.getElementById('reset').onclick=()=>{camera.position.set(20,135,300);controls.target.set(0,0,0);follow=null;fly=0;tour=false;document.getElementById('tour').classList.remove('active');};
  resetAngleButton.addEventListener('click',function(){landingActive=false;landingTarget=null;marsSurfaceTransition=null;marsSurfaceMode=false;if(marsSurfaceGroup)marsSurfaceGroup.visible=false;objects.mars.userData.tilt.visible=true;marsSurfacePanel.classList.remove('open');controls.enabled=true;camera.position.set(20,135,300);controls.target.set(0,0,0);follow=null;fly=0;tour=false;document.getElementById('tour').classList.remove('active');syncLandingButton();});
 document.getElementById('pause').onclick=()=>{running=!running;document.getElementById('pause').textContent=running?'Ⅱ Pause':'▶ Resume';};
 document.getElementById('tour').onclick=()=>{tour=!tour;document.getElementById('tour').classList.toggle('active',tour);if(tour)focus('planetx');};
 document.getElementById('time').addEventListener('input',e=>{epoch=+e.target.value;document.getElementById('epoch').textContent='EPOCH '+String(epoch).padStart(3,'0');});
-const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();let dx=0,dy=0;canvas.addEventListener('pointerdown',e=>{dx=e.clientX;dy=e.clientY;});canvas.addEventListener('click',e=>{if(Math.hypot(e.clientX-dx,e.clientY-dy)>5)return;const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(selectables,true);if(hits.length){let obj=hits[0].object;while(obj.parent&&!objects[obj.name])obj=obj.parent;if(objects[obj.name]){tour=false;document.getElementById('tour').classList.remove('active');focus(obj.name);window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:document.getElementById('name').textContent}}));}}});
+const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();let dx=0,dy=0;canvas.addEventListener('pointerdown',e=>{dx=e.clientX;dy=e.clientY;});canvas.addEventListener('click',e=>{if(Math.hypot(e.clientX-dx,e.clientY-dy)>5)return;const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(selectables,true);if(hits.length){let obj=hits[0].object;while(obj.parent&&!objects[obj.name])obj=obj.parent;if(objects[obj.name]){tour=false;document.getElementById('tour').classList.remove('active');focus(obj.name);window.dispatchEvent(new CustomEvent('planetx:object-selected',{detail:{name:document.getElementById('name').textContent}}));}}});
 function place(){const t=elapsed+epoch*.5;for(const k in objects){const u=objects[k].userData;if(u.R){const a=u.a+u.w*t;objects[k].position.set(Math.cos(a)*u.R,Math.sin(a)*u.R*Math.sin(u.inc),Math.sin(a)*u.R*Math.cos(u.inc));}}
  const e=objects.earth.position;objects.moon.position.set(e.x+Math.cos(t*3.2)*12,e.y+Math.sin(t*3.2)*1.2,e.z+Math.sin(t*3.2)*12);craft.position.set(e.x+Math.cos(t*9)*8.2,e.y+Math.sin(t*4.5)*3,e.z+Math.sin(t*9)*8.2);craft.rotation.y=-t*9;}
 function labels(){for(const k in labs){const o=objects[k],e=labs[k];_v.copy(o.position);_v.y+=o.userData.r*1.25+1.5;_v.project(camera);const vis=showLab&&_v.z<1&&Math.abs(_v.x)<1.1&&Math.abs(_v.y)<1.1;e.style.display=vis?'block':'none';if(vis)e.style.transform='translate('+((_v.x*.5+.5)*innerWidth)+'px,'+((-_v.y*.5+.5)*innerHeight)+'px) translate(-50%,-100%)';}}
@@ -1283,6 +1295,13 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
  if(mq('(max-width:900px)'))document.body.classList.add('side-off');
 })();
 </script>
+<aside id="objectInfoCard" aria-live="polite" aria-label="Selected space object information">
+ <div class="object-kicker" id="objectInfoType">SPACE OBJECT</div>
+ <h2 id="objectInfoName">Select an object</h2>
+ <p id="objectInfoDesc">Select an object in Sphere X to see its scientific overview.</p>
+ <div class="object-meta"><span>Region<strong id="objectInfoRegion">—</strong></span><span>Data status<strong id="objectInfoData">—</strong></span></div>
+ <button id="objectResearchBtn" type="button">Use SpaceMind for more research ↗</button>
+</aside>
 <button class="sm-btn" id="smBtn" type="button" aria-expanded="false" aria-controls="smPanel"><span class="sm-logo"></span>SpaceMind</button>
 <section class="sm-panel" id="smPanel" aria-label="SpaceMind chat">
  <div class="sm-head"><span class="sm-logo"></span>SpaceMind<button class="sm-x" id="smX" type="button" aria-label="Close chat">×</button></div>
@@ -1385,7 +1404,22 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
+  var objectCard=document.getElementById('objectInfoCard'),researchObjectButton=document.getElementById('objectResearchBtn'),selectedObject=null;
+  window.addEventListener('planetx:object-selected',function(e){
+   var detail=e.detail||{},name=detail.name;if(!name)return;
+   selectedObject={name:name,prompt:detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.')};
+   document.getElementById('objectInfoType').textContent=document.getElementById('type').textContent||'SPACE OBJECT';
+   document.getElementById('objectInfoName').textContent=document.getElementById('name').textContent||name;
+   document.getElementById('objectInfoDesc').textContent=document.getElementById('desc').textContent||'Scientific overview not available.';
+   document.getElementById('objectInfoRegion').textContent=document.getElementById('region').textContent||'—';
+   document.getElementById('objectInfoData').textContent=document.getElementById('data').textContent||'—';
+   objectCard.classList.add('open');
+  });
+  researchObjectButton.addEventListener('click',function(){
+   if(!selectedObject)return;
+   var prompt=selectedObject.prompt,cacheKey=String(selectedObject.name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();
+   toggle(true);send(prompt,true,cacheKey);
+  });
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  var dataToggle=document.getElementById('smDataToggle'),dataMenu=document.getElementById('smDataMenu');
  dataToggle.addEventListener('click',function(){var open=dataMenu.hidden;dataMenu.hidden=!open;dataToggle.setAttribute('aria-expanded',open?'true':'false');dataToggle.lastElementChild.textContent=open?'−':'＋';});
