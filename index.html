@@ -11,7 +11,7 @@
 <script>
 (async function(){
   var status=document.getElementById('status');
-  var base='https://raw.githubusercontent.com/kamilcodes14/planet-x-sphere-x/integration/full-spacemind-workspace/observatory-source/';
+  var base='https://raw.githubusercontent.com/kamilcodes14/planet-x-sphere-x/f3bb2e4d90ae4513195aa4d16fcfe00a8eccf427/observatory-source/';
   try{
     var names=['part-01.txt','part-02.txt','part-03.txt','part-04.txt','part-05.txt','part-06.txt','part-07.txt','part-08.txt'];
     var parts=await Promise.all(names.map(async function(name){
@@ -41,7 +41,7 @@
 <script>
 (function(){var launch=document.getElementById('px-full-sm-launch'),dialog=document.getElementById('px-full-sm-dialog'),close=document.getElementById('px-full-sm-close');if(!launch||!dialog||!close||typeof dialog.showModal!=='function'){if(launch)launch.addEventListener('click',function(){window.open('https://spacemind-frontend.vercel.app/','_blank','noopener');});return;}launch.addEventListener('click',function(){if(!dialog.open)dialog.showModal();});close.addEventListener('click',function(){dialog.close();});dialog.addEventListener('click',function(event){if(event.target===dialog)dialog.close();});})();
 </script>`;
-    html=html.replace('</body>',dock+'\\n</body>');
+    html=html.replace('</body>',dock+'\n</body>');
     if(!html.includes('src="https://spacemind-frontend.vercel.app/"'))throw new Error('SpaceMind dock validation failed');
     document.open();document.write(html);document.close();
   }catch(error){status.textContent='OBSERVATORY COULD NOT LOAD';var detail=document.createElement('small');detail.textContent=error.message;status.appendChild(detail);console.error(error);}
