@@ -1435,7 +1435,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
+ window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name||!document.body.classList.contains('lander-spacemind'))return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  var dataToggle=document.getElementById('smDataToggle'),dataMenu=document.getElementById('smDataMenu');
  dataToggle.addEventListener('click',function(){var open=dataMenu.hidden;dataMenu.hidden=!open;dataToggle.setAttribute('aria-expanded',open?'true':'false');dataToggle.lastElementChild.textContent=open?'−':'＋';});
