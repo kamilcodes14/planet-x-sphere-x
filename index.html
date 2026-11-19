@@ -11,7 +11,7 @@
 <script>
 (async function(){
   var status=document.getElementById('status');
-  var base='https://raw.githubusercontent.com/kamilcodes14/planet-x-sphere-x/f3bb2e4d90ae4513195aa4d16fcfe00a8eccf427/observatory-source/';
+  var base='https://raw.githubusercontent.com/kamilcodes14/planet-x-sphere-x/ee61eae2003b9096ea69152808208c0cb3e6a660/observatory-source/';
   try{
     var names=['part-01.txt','part-02.txt','part-03.txt','part-04.txt','part-05.txt','part-06.txt','part-07.txt','part-08.txt'];
     var parts=await Promise.all(names.map(async function(name){
@@ -20,29 +20,7 @@
       return response.text();
     }));
     var html=parts.join('');
-    if(html.length!==4388335||!html.includes('data-body="jupiter"')||!html.includes('id="smBtn"'))throw new Error('Original observatory source integrity check failed');
-    var dock=`
-<style id="px-full-spacemind-style">
-#px-full-sm-launch{position:fixed;z-index:2147483001;right:22px;bottom:82px;border:1px solid rgba(139,234,255,.55);border-radius:999px;padding:12px 17px;background:rgba(5,20,35,.96);color:#eaf7ff;font:600 11px ui-monospace,Consolas,monospace;letter-spacing:.12em;cursor:pointer;box-shadow:0 12px 34px #000b;backdrop-filter:blur(12px)}
-#px-full-sm-launch:hover{background:#12324a;border-color:#8beaff}
-#px-full-sm-dialog{position:fixed;inset:12px;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;border:1px solid rgba(139,234,255,.38);border-radius:16px;background:#050913;color:#eaf7ff;overflow:hidden;box-shadow:0 24px 80px #000d}
-#px-full-sm-dialog::backdrop{background:rgba(0,0,0,.78);backdrop-filter:blur(5px)}
-#px-full-sm-dialog .px-full-sm-bar{height:54px;display:flex;align-items:center;gap:12px;padding:0 16px;background:#091625;border-bottom:1px solid #ffffff20;font:12px system-ui}
-#px-full-sm-dialog .px-full-sm-title{font-weight:700;letter-spacing:.16em;margin-right:auto}
-#px-full-sm-dialog a,#px-full-sm-dialog button{display:inline-block;color:#d9f1ff;background:transparent;border:1px solid #ffffff35;border-radius:8px;padding:8px 11px;text-decoration:none;font:12px system-ui;cursor:pointer}
-#px-full-sm-dialog iframe{display:block;width:100%;height:calc(100% - 54px);border:0;background:#080b12}
-@media(max-width:600px){#px-full-sm-launch{right:12px;bottom:76px;padding:11px 13px;font-size:10px}#px-full-sm-dialog{inset:0;border-radius:0}#px-full-sm-dialog .px-full-sm-bar{padding:0 9px;gap:7px}#px-full-sm-dialog .px-full-sm-title{font-size:10px;letter-spacing:.08em}}
-</style>
-<button id="px-full-sm-launch" type="button" aria-haspopup="dialog">✦ FULL SPACEMIND</button>
-<dialog id="px-full-sm-dialog" aria-label="Full SpaceMind research workspace">
-<div class="px-full-sm-bar"><span class="px-full-sm-title">SPACEMIND · FULL RESEARCH WORKSPACE</span><a href="https://spacemind-frontend.vercel.app/" target="_blank" rel="noopener noreferrer">Open separately ↗</a><button id="px-full-sm-close" type="button" aria-label="Close SpaceMind workspace">Close ×</button></div>
-<iframe title="Full SpaceMind research workspace" src="https://spacemind-frontend.vercel.app/" allow="clipboard-read; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-</dialog>
-<script>
-(function(){var launch=document.getElementById('px-full-sm-launch'),dialog=document.getElementById('px-full-sm-dialog'),close=document.getElementById('px-full-sm-close');if(!launch||!dialog||!close||typeof dialog.showModal!=='function'){if(launch)launch.addEventListener('click',function(){window.open('https://spacemind-frontend.vercel.app/','_blank','noopener');});return;}launch.addEventListener('click',function(){if(!dialog.open)dialog.showModal();});close.addEventListener('click',function(){dialog.close();});dialog.addEventListener('click',function(event){if(event.target===dialog)dialog.close();});})();
-<\/script>`;
-    html=html.replace('</body>',dock+'\n</body>');
-    if(!html.includes('src="https://spacemind-frontend.vercel.app/"'))throw new Error('SpaceMind dock validation failed');
+    if(html.length!==4388559||!html.includes('data-body="jupiter"')||!html.includes('id="smBtn"'))throw new Error('Original observatory source integrity check failed');
     document.open();document.write(html);document.close();
   }catch(error){status.textContent='OBSERVATORY COULD NOT LOAD';var detail=document.createElement('small');detail.textContent=error.message;status.appendChild(detail);console.error(error);}
 })();
