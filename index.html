@@ -40,7 +40,7 @@
 </dialog>
 <script>
 (function(){var launch=document.getElementById('px-full-sm-launch'),dialog=document.getElementById('px-full-sm-dialog'),close=document.getElementById('px-full-sm-close');if(!launch||!dialog||!close||typeof dialog.showModal!=='function'){if(launch)launch.addEventListener('click',function(){window.open('https://spacemind-frontend.vercel.app/','_blank','noopener');});return;}launch.addEventListener('click',function(){if(!dialog.open)dialog.showModal();});close.addEventListener('click',function(){dialog.close();});dialog.addEventListener('click',function(event){if(event.target===dialog)dialog.close();});})();
-</script>`;
+<\/script>`;
     html=html.replace('</body>',dock+'\n</body>');
     if(!html.includes('src="https://spacemind-frontend.vercel.app/"'))throw new Error('SpaceMind dock validation failed');
     document.open();document.write(html);document.close();
