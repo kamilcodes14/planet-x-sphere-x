@@ -69,6 +69,9 @@ body.side-off .side-tab{display:block}
 .sm-btn{display:none}
 body.lander-spacemind .sm-btn{display:flex;z-index:70}
 body.lander-spacemind .sm-panel{z-index:70}
+/* Keep the contextual SpaceMind controls above the landing iframe. */
+#aresOv .sm-btn{display:flex;z-index:4}
+#aresOv .sm-panel{z-index:4}
 .sm-head{display:flex;align-items:center;gap:10px;padding:13px 12px 12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.2em}
 .sm-x{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:transparent;color:#a7a7ad;font-size:14px;cursor:pointer}
 .sm-x:hover{background:rgba(255,255,255,.07);color:#f4f1ec}
