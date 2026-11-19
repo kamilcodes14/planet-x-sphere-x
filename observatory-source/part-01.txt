@@ -65,6 +65,10 @@ body.side-off .side-tab{display:block}
 .sm-logo{width:16px;height:16px;flex:none;border:1px solid #f4f1ec;background:conic-gradient(#f4f1ec 0 25%,#000 0 50%,#f4f1ec 0 75%,#000 0)}
 .sm-panel{position:fixed;z-index:5;right:22px;bottom:76px;width:400px;height:min(620px,calc(100vh - 120px));display:none;flex-direction:column;background:rgba(0,0,0,.94);border:1px solid rgba(255,255,255,.12);border-radius:14px;backdrop-filter:blur(14px);box-shadow:0 18px 60px #000b;color:#f4f1ec}
 .sm-panel.open{display:flex}
+/* SpaceMind is available inside Mars and Moon landing views, not on the global observatory screen. */
+.sm-btn{display:none}
+body.lander-spacemind .sm-btn{display:flex;z-index:70}
+body.lander-spacemind .sm-panel{z-index:70}
 .sm-head{display:flex;align-items:center;gap:10px;padding:13px 12px 12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.2em}
 .sm-x{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:transparent;color:#a7a7ad;font-size:14px;cursor:pointer}
 .sm-x:hover{background:rgba(255,255,255,.07);color:#f4f1ec}
@@ -1431,7 +1435,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
+ window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name||!document.body.classList.contains('lander-spacemind'))return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  var dataToggle=document.getElementById('smDataToggle'),dataMenu=document.getElementById('smDataMenu');
  dataToggle.addEventListener('click',function(){var open=dataMenu.hidden;dataMenu.hidden=!open;dataToggle.setAttribute('aria-expanded',open?'true':'false');dataToggle.lastElementChild.textContent=open?'−':'＋';});
