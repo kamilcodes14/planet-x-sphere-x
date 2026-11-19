@@ -20,7 +20,7 @@
       return response.text();
     }));
     var html=parts.join('');
-    if(html.length!==4389835||!html.includes('data-body="jupiter"')||!html.includes('id="smBtn"'))throw new Error('Original observatory source integrity check failed');
+    if(html.length!==4390310||!html.includes('data-body="jupiter"')||!html.includes('id="smBtn"'))throw new Error('Original observatory source integrity check failed');
     document.open();document.write(html);document.close();
   }catch(error){status.textContent='OBSERVATORY COULD NOT LOAD';var detail=document.createElement('small');detail.textContent=error.message;status.appendChild(detail);console.error(error);}
 })();
