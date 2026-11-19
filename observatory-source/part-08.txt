@@ -7,12 +7,6 @@ CksaD0oMCxfLnVzZVJlZikoITApLGc9KDAsXy51c2VSZWYpKDEpLHY9KDAsXy51c2VSZWYpKGBjaW5lb
  function closeSide(){if(window.matchMedia&&window.matchMedia('(max-width:760px)').matches)document.body.classList.add('side-off');}
  function openLander(key){
   if(frame)return;
-  var contextualSpaceMind=(key==='mars'||key==='moon');
-  document.body.classList.toggle('lander-spacemind',contextualSpaceMind);
-  var smInput=document.getElementById('smIn');
-  if(smInput)smInput.placeholder=contextualSpaceMind?('Ask SpaceMind about '+(key==='moon'?'the Moon':'Mars')+' surface…'):'Ask about a planet or object';
-  var spaceMindPrompt=null,spaceMindWorld=null;
-  if(contextualSpaceMind){spaceMindWorld=key==='moon'?'Moon':'Mars';spaceMindPrompt=key==='moon'?'Give me a scientific overview of the lunar surface, including regolith, maria, highlands, impact craters, polar regions, water ice and major landing sites.':'Give me a scientific overview of the Martian surface, including major terrain regions, Olympus Mons, Valles Marineris, craters, regolith, dust, water evidence and rover landing sites.';}
   try{
    var bin=atob(document.getElementById('aresB64-'+key).textContent.trim()),bytes=new Uint8Array(bin.length);
    for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
@@ -25,21 +19,10 @@ CksaD0oMCxfLnVzZVJlZikoITApLGc9KDAsXy51c2VSZWYpKDEpLHY9KDAsXy51c2VSZWYpKGBjaW5lb
   load.style.display='grid';load.textContent='DESCENDING TO '+NAMES[key].toUpperCase()+'\u2026';
   frame.src=url;ov.insertBefore(frame,ov.firstChild);
   ov.classList.add('open');ov.setAttribute('aria-hidden','false');
-  if(contextualSpaceMind){
-   var smButton=document.getElementById('smBtn'),smPanel=document.getElementById('smPanel');
-   if(smButton)ov.appendChild(smButton);
-   if(smPanel)ov.appendChild(smPanel);
-   window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:spaceMindWorld,prompt:spaceMindPrompt}}));
-  }
   requestAnimationFrame(function(){requestAnimationFrame(function(){ov.classList.add('show');});});
   closeSide();
  }
  function closeLander(){
-  document.body.classList.remove('lander-spacemind');
-  var smPanel=document.getElementById('smPanel'),smButton=document.getElementById('smBtn');
-  if(smPanel){smPanel.classList.remove('open');document.body.appendChild(smPanel);}
-  if(smButton){smButton.setAttribute('aria-expanded','false');document.body.appendChild(smButton);}
-  var smInput=document.getElementById('smIn');if(smInput)smInput.placeholder='Ask about a planet or object';
   ov.classList.remove('show');ov.setAttribute('aria-hidden','true');
   setTimeout(function(){
    ov.classList.remove('open');
