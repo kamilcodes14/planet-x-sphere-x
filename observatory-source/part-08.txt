@@ -7,6 +7,10 @@ CksaD0oMCxfLnVzZVJlZikoITApLGc9KDAsXy51c2VSZWYpKDEpLHY9KDAsXy51c2VSZWYpKGBjaW5lb
  function closeSide(){if(window.matchMedia&&window.matchMedia('(max-width:760px)').matches)document.body.classList.add('side-off');}
  function openLander(key){
   if(frame)return;
+  var contextualSpaceMind=(key==='mars'||key==='moon');
+  document.body.classList.toggle('lander-spacemind',contextualSpaceMind);
+  var smInput=document.getElementById('smIn');
+  if(smInput)smInput.placeholder=contextualSpaceMind?('Ask SpaceMind about '+(key==='moon'?'the Moon':'Mars')+' surface…'):'Ask about a planet or object';
   try{
    var bin=atob(document.getElementById('aresB64-'+key).textContent.trim()),bytes=new Uint8Array(bin.length);
    for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
@@ -23,6 +27,11 @@ CksaD0oMCxfLnVzZVJlZikoITApLGc9KDAsXy51c2VSZWYpKDEpLHY9KDAsXy51c2VSZWYpKGBjaW5lb
   closeSide();
  }
  function closeLander(){
+  document.body.classList.remove('lander-spacemind');
+  var smPanel=document.getElementById('smPanel'),smButton=document.getElementById('smBtn');
+  if(smPanel)smPanel.classList.remove('open');
+  if(smButton)smButton.setAttribute('aria-expanded','false');
+  var smInput=document.getElementById('smIn');if(smInput)smInput.placeholder='Ask about a planet or object';
   ov.classList.remove('show');ov.setAttribute('aria-hidden','true');
   setTimeout(function(){
    ov.classList.remove('open');
