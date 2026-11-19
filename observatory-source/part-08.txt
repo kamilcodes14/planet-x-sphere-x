@@ -11,6 +11,7 @@ CksaD0oMCxfLnVzZVJlZikoITApLGc9KDAsXy51c2VSZWYpKDEpLHY9KDAsXy51c2VSZWYpKGBjaW5lb
   document.body.classList.toggle('lander-spacemind',contextualSpaceMind);
   var smInput=document.getElementById('smIn');
   if(smInput)smInput.placeholder=contextualSpaceMind?('Ask SpaceMind about '+(key==='moon'?'the Moon':'Mars')+' surface…'):'Ask about a planet or object';
+  if(contextualSpaceMind){var worldName=key==='moon'?'Moon':'Mars';var overviewPrompt=key==='moon'?'Give me a scientific overview of the lunar surface, including regolith, maria, highlands, impact craters, polar regions, water ice and major landing sites.':'Give me a scientific overview of the Martian surface, including major terrain regions, Olympus Mons, Valles Marineris, craters, regolith, dust, water evidence and rover landing sites.';window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:worldName,prompt:overviewPrompt}}));}
   try{
    var bin=atob(document.getElementById('aresB64-'+key).textContent.trim()),bytes=new Uint8Array(bin.length);
    for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
