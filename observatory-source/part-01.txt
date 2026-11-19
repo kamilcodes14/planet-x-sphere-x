@@ -75,7 +75,7 @@ body.lander-spacemind .sm-panel{z-index:70}
 .sm-head{display:flex;align-items:center;gap:10px;padding:13px 12px 12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.2em}
 .sm-x{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:transparent;color:#a7a7ad;font-size:14px;cursor:pointer}
 .sm-x:hover{background:rgba(255,255,255,.07);color:#f4f1ec}
-.sm-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:#3b3b43 transparent}
+.sm-auth{padding:12px;display:grid;gap:9px;border-bottom:1px solid rgba(255,255,255,.08)}.sm-auth[hidden]{display:none}.sm-auth label{display:grid;gap:5px;color:#b9c5d1;font-size:11px}.sm-auth input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid rgba(255,255,255,.18);border-radius:7px;background:#0b111b;color:#fff;font:inherit}.sm-auth-submit{padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:7px;background:#e9eef5;color:#111;font:600 12px system-ui;cursor:pointer}.sm-auth-error{margin:0;color:#ffb8b8;font-size:11px;line-height:1.4}.sm-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:#3b3b43 transparent}
 .sm-m{max-width:88%;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.55}
 .sm-m.bot{align-self:flex-start;background:rgba(255,255,255,.07);color:#e4e4e8}
 .sm-m.bot b{display:block;margin-bottom:3px;color:#fff;font-weight:600}
@@ -1350,6 +1350,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
    <button class="sm-data-action" type="button" data-space-query="Show upcoming rocket launches from the connected launch schedule. Include launch provider, vehicle or mission, NET date, launch site and status, and note that schedules can change and this is not a NASA operations feed.">↗ Upcoming launches</button>
   </div>
  </div>
+ <form class="sm-auth" id="smAuth" hidden><label>Email<input id="smAuthEmail" type="email" autocomplete="username" required placeholder="Your SpaceMind email"></label><label>Password<input id="smAuthPassword" type="password" autocomplete="current-password" required placeholder="Your password"></label><button class="sm-auth-submit" id="smAuthSubmit" type="submit">Sign in to SpaceMind</button><p class="sm-auth-error" id="smAuthError" role="alert"></p></form>
  <div class="sm-log" id="smLog" aria-live="polite"></div>
  <div class="sm-row"><input class="sm-in" id="smIn" type="text" placeholder="Ask about a planet or object" autocomplete="off" aria-label="Message SpaceMind"><button class="sm-go" id="smGo" type="button">Send</button></div>
  <div class="sm-note">Connected to SpaceMind AI · Research · Live space data</div>
@@ -1361,7 +1362,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
  var SUPABASE_URL='https://aqblctjucyxqjmylojgc.supabase.co';
  var SUPABASE_KEY='sb_publishable_mTWZsvPLjdRCHmHDw1EeOw_VIKpy6V_';
  var btn=document.getElementById('smBtn'),panel=document.getElementById('smPanel'),log=document.getElementById('smLog'),inp=document.getElementById('smIn'),go=document.getElementById('smGo');
- var client=null,chatId=null,ready=null,busy=false;
+ var client=null,chatId=null,ready=null,busy=false,waitingQuestion=null,authForm=document.getElementById('smAuth'),authEmail=document.getElementById('smAuthEmail'),authPassword=document.getElementById('smAuthPassword'),authSubmit=document.getElementById('smAuthSubmit'),authError=document.getElementById('smAuthError');
  function add(cls,title,text){var d=document.createElement('div');d.className='sm-m '+cls;if(title){var b=document.createElement('b');b.textContent=title;d.appendChild(b);}var p=document.createElement('div');p.className='sm-text';p.textContent=text||'';d.appendChild(p);log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
  function status(text){var d=add('bot','SpaceMind',text);d.classList.add('sm-status');return d;}
  function items(){return Array.prototype.slice.call(document.querySelectorAll('.si'));}
@@ -1382,14 +1383,14 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   if(ready)return ready;
   ready=(async function(){
    if(!window.supabase||!window.supabase.createClient)throw new Error('The secure connection library could not load. Refresh and try again.');
-   client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+   if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
    var sessionResult=await client.auth.getSession(),session=sessionResult.data&&sessionResult.data.session;
-   if(!session){var signed=await client.auth.signInAnonymously();if(signed.error)throw signed.error;}
-   var auth=await client.auth.getUser();if(auth.error||!auth.data.user)throw (auth.error||new Error('Anonymous session could not be created.'));
+   if(!session){var required=new Error('Sign in with your SpaceMind account to use research chat.');required.code='AUTH_REQUIRED';throw required;}
+   var auth=await client.auth.getUser();if(auth.error||!auth.data.user)throw (auth.error||new Error('Your SpaceMind session could not be verified. Please sign in again.'));
    var created=await client.from('chats').insert({user_id:auth.data.user.id,title:'Planet X Observatory'}).select('id').single();
    if(created.error)throw created.error;chatId=created.data.id;
    return client;
-  })();
+  })().catch(function(error){ready=null;throw error;});
   return ready;
  }
  async function discovery(q){
@@ -1434,10 +1435,23 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
    }
    if(selected)result.answer=(result.answer||'')+'\n\nI’ve also moved the observatory camera to '+selected+'.';
    renderResult(result,pending);
-  }catch(e){pending.querySelector('.sm-text').textContent='I could not connect to SpaceMind: '+(e.message||'Please try again.');pending.classList.remove('sm-status');}
+  }catch(e){if(e&&e.code==='AUTH_REQUIRED'){waitingQuestion=v;authForm.hidden=false;authError.textContent='';pending.querySelector('.sm-text').textContent='Sign in with your SpaceMind account to continue. Your question will be kept.';pending.classList.remove('sm-status');}else{pending.querySelector('.sm-text').textContent='I could not connect to SpaceMind: '+(e.message||'Please try again.');pending.classList.remove('sm-status');}}
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
- function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
+ authForm.addEventListener('submit',async function(e){
+  e.preventDefault();authSubmit.disabled=true;authError.textContent='';
+  try{
+   if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+   var result=await client.auth.signInWithPassword({email:authEmail.value.trim(),password:authPassword.value});
+   if(result.error)throw result.error;
+   authPassword.value='';authForm.hidden=true;ready=null;
+   var question=waitingQuestion;waitingQuestion=null;
+   await initialize();
+   if(question)send(question,true);
+  }catch(error){authError.textContent=error.message||'Sign-in failed. Please try again.';}
+  finally{authSubmit.disabled=false;}
+ });
+ function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open){if(authForm.hidden)inp.focus();else authEmail.focus();}}
  window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name||!document.body.classList.contains('lander-spacemind'))return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  var dataToggle=document.getElementById('smDataToggle'),dataMenu=document.getElementById('smDataMenu');
