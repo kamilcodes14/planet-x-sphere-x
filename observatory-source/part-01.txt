@@ -145,7 +145,7 @@ body.lander-spacemind .sm-panel{z-index:70}
 <canvas id="space"></canvas><div class="overlay"></div><div id="labels"></div>
 <div id="loading"><div>Welcome to Planet X Sphere X Observatory</div></div>
 <div id="error"><b>3D scene could not start</b><p id="errorText"></p><p>Check your internet connection and make sure hardware acceleration is enabled in Chrome.</p></div>
-<header><div class="brand">✧ <b>SPHEREx</b> / PLANET X OBSERVATORY</div></header>
+
 <!-- old right-hand panel: hidden, not deleted, so the scene script's element lookups keep working -->
 <aside class="panel" hidden style="display:none">
  <div class="eyebrow" id="type">MISSION TARGET · HYPOTHETICAL</div><h2 id="name">Planet X</h2>
