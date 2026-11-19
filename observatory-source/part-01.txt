@@ -65,18 +65,10 @@ body.side-off .side-tab{display:block}
 .sm-logo{width:16px;height:16px;flex:none;border:1px solid #f4f1ec;background:conic-gradient(#f4f1ec 0 25%,#000 0 50%,#f4f1ec 0 75%,#000 0)}
 .sm-panel{position:fixed;z-index:5;right:22px;bottom:76px;width:400px;height:min(620px,calc(100vh - 120px));display:none;flex-direction:column;background:rgba(0,0,0,.94);border:1px solid rgba(255,255,255,.12);border-radius:14px;backdrop-filter:blur(14px);box-shadow:0 18px 60px #000b;color:#f4f1ec}
 .sm-panel.open{display:flex}
-/* Keep SpaceMind available inside Mars and Moon landing views only. */
-.sm-btn{display:flex;z-index:70}
-.sm-panel{z-index:70}
-body.lander-spacemind .sm-btn{display:flex;z-index:70}
-body.lander-spacemind .sm-panel{z-index:70}
-/* Keep the contextual SpaceMind controls above the landing iframe. */
-#aresOv .sm-btn{display:flex;z-index:4}
-#aresOv .sm-panel{z-index:4}
 .sm-head{display:flex;align-items:center;gap:10px;padding:13px 12px 12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.2em}
 .sm-x{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:transparent;color:#a7a7ad;font-size:14px;cursor:pointer}
 .sm-x:hover{background:rgba(255,255,255,.07);color:#f4f1ec}
-sm-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:#3b3b43 transparent}
+.sm-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:#3b3b43 transparent}
 .sm-m{max-width:88%;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.55}
 .sm-m.bot{align-self:flex-start;background:rgba(255,255,255,.07);color:#e4e4e8}
 .sm-m.bot b{display:block;margin-bottom:3px;color:#fff;font-weight:600}
@@ -145,7 +137,7 @@ sm-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;ga
 <canvas id="space"></canvas><div class="overlay"></div><div id="labels"></div>
 <div id="loading"><div>Welcome to Planet X Sphere X Observatory</div></div>
 <div id="error"><b>3D scene could not start</b><p id="errorText"></p><p>Check your internet connection and make sure hardware acceleration is enabled in Chrome.</p></div>
-
+<header><div class="brand">✧ <b>SPHEREx</b> / PLANET X OBSERVATORY</div></header>
 <!-- old right-hand panel: hidden, not deleted, so the scene script's element lookups keep working -->
 <aside class="panel" hidden style="display:none">
  <div class="eyebrow" id="type">MISSION TARGET · HYPOTHETICAL</div><h2 id="name">Planet X</h2>
@@ -1383,15 +1375,14 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   if(ready)return ready;
   ready=(async function(){
    if(!window.supabase||!window.supabase.createClient)throw new Error('The secure connection library could not load. Refresh and try again.');
-   if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+   client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
    var sessionResult=await client.auth.getSession(),session=sessionResult.data&&sessionResult.data.session;
-   if(sessionResult.error)throw sessionResult.error;
-   if(!session){var guest=await client.auth.signInAnonymously();if(guest.error)throw new Error('Guest access could not start: '+guest.error.message);session=guest.data&&guest.data.session;if(!session)throw new Error('SpaceMind could not start a guest session. Please try again.');}
-   var auth=await client.auth.getUser();if(auth.error||!auth.data.user)throw (auth.error||new Error('The guest session could not be verified. Please refresh and try again.'));
+   if(!session){var signed=await client.auth.signInAnonymously();if(signed.error)throw signed.error;}
+   var auth=await client.auth.getUser();if(auth.error||!auth.data.user)throw (auth.error||new Error('Anonymous session could not be created.'));
    var created=await client.from('chats').insert({user_id:auth.data.user.id,title:'Planet X Observatory'}).select('id').single();
    if(created.error)throw created.error;chatId=created.data.id;
    return client;
-  })().catch(function(error){ready=null;throw error;});
+  })();
   return ready;
  }
  async function discovery(q){
@@ -1440,7 +1431,7 @@ animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;ca
   finally{busy=false;go.disabled=false;inp.disabled=false;go.textContent='Send';inp.focus();}
  }
  function toggle(open){panel.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);if(open)inp.focus();}
- window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name||!document.body.classList.contains('lander-spacemind'))return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
+ window.addEventListener('planetx:body-selected',function(e){var detail=e.detail||{},name=detail.name;if(!name)return;toggle(true);var prompt=detail.prompt||('Give me a concise overview of '+name+' and its key scientific facts.');var cacheKey=String(name).trim().toLowerCase()+'|'+String(prompt).trim().toLowerCase();send(prompt,true,cacheKey);});
  btn.addEventListener('click',function(){toggle(!panel.classList.contains('open'));});
  var dataToggle=document.getElementById('smDataToggle'),dataMenu=document.getElementById('smDataMenu');
  dataToggle.addEventListener('click',function(){var open=dataMenu.hidden;dataMenu.hidden=!open;dataToggle.setAttribute('aria-expanded',open?'true':'false');dataToggle.lastElementChild.textContent=open?'−':'＋';});
