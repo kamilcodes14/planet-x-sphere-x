@@ -1107,8 +1107,6 @@ focus=function(name){
  if(marsSurfaceMode||marsSurfaceTransition){marsSurfaceTransition=null;marsSurfaceMode=false;if(marsSurfaceGroup)marsSurfaceGroup.visible=false;objects.mars.userData.tilt.visible=true;marsSurfacePanel.classList.remove('open');controls.enabled=true;}
  landingActive=false;landingTarget=null;
  focusBeforeLanding(name);
- var selectedName=document.getElementById('name').textContent||name;
- window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:selectedName,prompt:'Give me a clear, scientifically grounded overview of '+selectedName+'. Explain its composition, structure, atmosphere or surface, important features, exploration history, and current scientific understanding. Distinguish established facts from estimates and clearly identify any simulated or hypothetical details.'}}));
  landingTarget=landingBodies.has(name)?name:null;
  syncLandingButton();
 };
@@ -1143,7 +1141,7 @@ landingButton.addEventListener('click',function(){
 syncLandingButton();
 document.getElementById('lab').onclick=e=>{showLab=!showLab;e.target.classList.toggle('active',showLab);};
 document.getElementById('orb').onclick=e=>{const on=!orbitLines[0].visible;orbitLines.forEach(l=>l.visible=on);e.target.classList.toggle('active',on);};
-document.querySelectorAll('[data-body]').forEach(b=>b.addEventListener('click',()=>{tour=false;document.getElementById('tour').classList.remove('active');focus(b.dataset.body);}));
+document.querySelectorAll('[data-body]').forEach(b=>b.addEventListener('click',()=>{tour=false;document.getElementById('tour').classList.remove('active');focus(b.dataset.body);window.dispatchEvent(new CustomEvent('planetx:body-selected',{detail:{name:document.getElementById('name').textContent,prompt:'Give me a clear, scientifically grounded overview of '+document.getElementById('name').textContent+'. Explain its composition, structure, atmosphere or surface, important features, exploration history, and current scientific understanding. Distinguish established facts from estimates and clearly identify any simulated or hypothetical details.'}}));}));
 document.getElementById('reset').onclick=()=>{camera.position.set(20,135,300);controls.target.set(0,0,0);follow=null;fly=0;tour=false;document.getElementById('tour').classList.remove('active');};
  resetAngleButton.addEventListener('click',function(){landingActive=false;landingTarget=null;marsSurfaceTransition=null;marsSurfaceMode=false;if(marsSurfaceGroup)marsSurfaceGroup.visible=false;objects.mars.userData.tilt.visible=true;marsSurfacePanel.classList.remove('open');controls.enabled=true;camera.position.set(20,135,300);controls.target.set(0,0,0);follow=null;fly=0;tour=false;document.getElementById('tour').classList.remove('active');syncLandingButton();});
 document.getElementById('pause').onclick=()=>{running=!running;document.getElementById('pause').textContent=running?'Ⅱ Pause':'▶ Resume';};
